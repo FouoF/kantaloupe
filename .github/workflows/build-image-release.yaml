@@ -2,7 +2,7 @@ name: Build & Release Image
 
 env:
   # ghcr.io/dynamia-ai/kantaloupe/kantaloupe-apiserver => ghcr.io/dynamia-ai/kantaloupe-apiserver
-  IMAGE_REPO: ${{ github.repository }}
+  IMAGE_REPO: fouof
   REGISTER: ghcr.io
   IMAGE_ROOT_PATH: build
   BUILD_PLATFORM: linux/amd64
