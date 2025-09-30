@@ -1,0 +1,488 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1;
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/kantaloupeflow/v1alpha1";
+
+import "api/types/objectmeta.proto";
+import "api/types/page.proto";
+
+enum PluginType {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    PLUGIN_TYPE_UNSPECIFIED = 0;
+    ssh                     = 1;
+    vscode                  = 2;
+    jupyter                 = 3;
+}
+
+enum WorkloadType {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    WORKLOAD_TYPE_UNSPECIFIED = 0;
+    Pod                       = 1;
+    Deployment                = 2;
+}
+
+message Kantaloupeflow {
+    // Standard object's metadata.
+    kantaloupe.dynamia.ai.api.types.ObjectMeta metadata = 1;
+    KantaloupeflowSpec spec                             = 2;
+    KantaloupeflowStatus status                         = 3;
+}
+
+message KantaloupeflowSpec {
+    repeated PluginType plugins = 1;
+    int32 replicas              = 2;
+    PodTemplateSpec template    = 3;
+    bool paused                 = 4;
+    WorkloadType workload       = 5;
+}
+
+enum KantaloupeflowState {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    KANTALOUPEFLOW_STATE_UNSPECIFIED = 0;
+    Unknow                           = 1;
+    Progressing                      = 2;
+    Running                          = 3;
+    Falied                           = 4;
+}
+
+message KantaloupeflowStatus {
+    // Total number of non-terminated pods targeted by this deployment (their labels match the selector).
+    // +optional
+    int32 replicas = 1;
+    // readyReplicas is the number of pods targeted by this Deployment with a Ready Condition.
+    // +optional
+    int32 readyReplicas = 2;
+    // Network info for jupyter, vscode.
+    repeated Network networks = 3;
+    // KantaloupeflowState is kantaloupeflow state.
+    KantaloupeflowState state = 4;
+    // Conditions is an array of current conditions.
+    repeated kantaloupe.dynamia.ai.api.types.Condition conditions = 5;
+    // Gpus using by this kantaloupeflow.
+    repeated GPU gpus = 6;
+}
+
+message Network {
+    // Name of network, eg jupyter, vscode.
+    string name = 1;
+    // URL means the external access address.
+    // For exposed ports, url like: 123.123.123.123:31332,
+    // For jupyter and vscode, url like: http://103.12.12.12/zestu.io/user-xx/instance-xx/xx
+    string url = 2;
+}
+
+// template is the object that describes the pod that will be created if
+// insufficient replicas are detected. Each pod stamped out by the StatefulSet
+// will fulfill this Template, but have a unique identity from the rest
+// of the StatefulSet.
+message PodTemplateSpec {
+    // Standard object's metadata.
+    kantaloupe.dynamia.ai.api.types.ObjectMeta metadata = 1;
+
+    // Spec describes the attributes that a pod is created with.
+    PodSpec spec = 2;
+}
+
+// PodSpec describes the attributes that a pod is created with.
+message PodSpec {
+    // List of volumes that can be mounted by containers belonging to the pod.
+    // More info: https://kubernetes.io/docs/concepts/storage/volumes
+    // +optional
+    repeated Volume volumes = 1;
+
+    // Containers name.
+    repeated Container containers = 2;
+}
+
+// Volume represents a named volume in a pod that may be accessed by any
+// container in the pod.
+message Volume {
+    string name = 1;
+    // HostPathVolumeSource represents a host path mapped into a pod.
+    // Host path volumes do not support ownership management or SELinux
+    // relabeling.
+    HostPathVolumeSource hostPath = 2;
+    // EmptyDirVolumeSource represents an empty directory for a pod.
+    // Empty directory volumes support ownership management and SELinux
+    // relabeling.
+    EmptyDirVolumeSource emptyDir = 3;
+    // SecretVolumeSource adapts a Secret into a volume.
+    // The contents of the target Secret's Data field will be presented in a
+    // volume as files using the keys in the Data field as the file names. Secret
+    // volumes support ownership management and SELinux relabeling.
+    SecretVolumeSource secret = 4;
+    // PersistentVolumeClaimVolumeSource represents a reference to a
+    // PersistentVolumeClaim in the same namespace
+    PersistentVolumeClaimVolumeSource persistentVolumeClaim = 5;
+    // ConfigMapVolumeSource adapts a ConfigMap into a volume.
+    //
+    // The contents of the target ConfigMap's Data field will be presented in a
+    // volume as files using the keys in the Data field as the file names, unless
+    // the items element is populated with specific mappings of keys to paths.
+    // ConfigMap volumes support ownership management and SELinux relabeling.
+    ConfigMapVolumeSource configMap = 6;
+}
+
+message Container {
+    // The name of Container.
+    string name = 1;
+
+    // The used image of Container.
+    string image = 2;
+
+    // The container command.
+    repeated string command = 3;
+
+    repeated string args = 4;
+
+    string working_dir = 5;
+
+    repeated Ports ports = 6;
+
+    // EnvVar represents an environment variable present in a Container.
+    repeated EnvVar env = 7;
+
+    // Source represents a source for the value of an EnvVar.
+    ResourceRequirements resources = 8;
+
+    // VolumeMount describes a mounting of a Volume within a container.
+    repeated VolumeMount volume_mounts = 9;
+
+    // Pull image policy.
+    string image_pull_policy = 10;
+}
+
+// VolumeMount for this container.
+message VolumeMount {
+    // This must match the Name of a Volume.
+    string name = 1;
+
+    // Mounted read-only if true, read-write otherwise (false or unspecified).
+    // Defaults to false.
+    // +optional
+    bool readOnly = 2;
+
+    // Full path to the mount volume path.
+    string mountPath = 3;
+
+    // Path within the volume from which the container's volume should be mounted.
+    // Defaults to "" (volume's root).
+    // +optional
+    string subPath = 4;
+
+    // mountPropagation determines how mounts are propagated from the host
+    // to container and the other way around.
+    // When not set, MountPropagationNone is used.
+    // This field is beta in 1.10.
+    // +optional
+    string mountPropagation = 5;
+
+    // Expanded path within the volume from which the container's volume should be
+    // mounted. Behaves similarly to SubPath but environment variable references
+    // $(VAR_NAME) are expanded using the container's environment. Defaults to ""
+    // (volume's root). SubPathExpr and SubPath are mutually exclusive. +optional
+    string subPathExpr = 6;
+}
+
+// Environment variable information.
+message EnvVar {
+    // The name of EnvVar.
+    string name = 1;
+
+    // The value of EnvVar.
+    string value = 2;
+}
+
+// Ports are not allowed for ephemeral containers.
+// +optional
+// +patchMergeKey=containerPort
+// +patchStrategy=merge
+// +listType=map
+// +listMapKey=containerPort
+// +listMapKey=protocol
+message Ports {
+    // ContainerPort connects to a certain container port in a pod.
+    int32 containerPort = 1;
+
+    // Number of port to expose on the host.
+    // If specified, this must be a valid port number, 0 < x < 65536.
+    // If HostNetwork is specified, this must match ContainerPort.
+    // Most containers do not need this.
+    // +optional
+    int32 hostPort = 2;
+
+    // If specified, this must be an IANA_SVC_NAME and unique within the pod. Each
+    // named port in a pod must have a unique name. Name for the port that can be
+    // referred to by services.
+    // +optional
+    string name = 3;
+
+    // Protocol for port. Must be UDP, TCP, or SCTP.
+    // Defaults to "TCP".
+    // +optional
+    // +default="TCP"
+    string protocol = 4;
+}
+
+// ResourceList returns a string representation of a resource list in a human
+// readable format.
+message ResourceList {
+    // Cpu is the total pod cpu resource. Unit: m.
+    string cpu = 1;
+
+    // Memory is the total memory resource. Unit: byte.
+    string memory = 2;
+
+    // Storage is the total storage resource. Unit: byte.
+    string storage = 3;
+
+    // Resources contains all resources include cpu, memory, storage.
+    map<string, string> resources = 4;
+}
+
+// ResourceRequirements describes the compute resource requirements.
+message ResourceRequirements {
+    // Limits describes the maximum amount of compute resources allowed.
+    // More info:
+    // https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    // +optional
+    ResourceList limits = 1;
+
+    // Requests describes the minimum amount of compute resources required.
+    // If Requests is omitted for a container, it defaults to Limits if that is
+    // explicitly specified, otherwise to an implementation-defined value. More
+    // info:
+    // https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    // +optional
+    ResourceList requests = 2;
+}
+
+// HostPathVolumeSource Represents a host path mapped into a pod.
+// Host path volumes do not support ownership management or SELinux relabeling.
+message HostPathVolumeSource {
+    // Path of the directory on the host.
+    // If the path is a symlink, it will follow the link to the real path.
+    string path = 1;
+    // Type for HostPath Volume
+    // Defaults to ""
+    // +optional
+    string type = 2;
+}
+
+// Represents an empty directory for a pod.
+// Empty directory volumes support ownership management and SELinux relabeling.
+message EmptyDirVolumeSource {
+    // What type of storage medium should back this directory.
+    // The default is "" which means to use the node's default medium.
+    // Must be an empty string (default) or Memory.
+    // More info: https://kubernetes.io/docs/concepts/storage/volumes#emptydir
+    // +optional
+    string medium = 1;
+
+    // Total amount of local storage required for this EmptyDir volume.
+    // The size limit is also applicable for memory medium.
+    // The maximum usage on memory medium EmptyDir would be the minimum value
+    // between the SizeLimit specified here and the sum of memory limits of all
+    // containers in a pod. The default is nil which means that the limit is
+    // undefined. More info: http://kubernetes.io/docs/user-guide/volumes#emptydir
+    // +optional
+    int64 sizeLimit = 2;
+}
+
+// Adapts a Secret into a volume.
+// The contents of the target Secret's Data field will be presented in a volume
+// as files using the keys in the Data field as the file names.
+// Secret volumes support ownership management and SELinux relabeling.
+message SecretVolumeSource {
+    // Name of the secret in the pod's namespace to use.
+    // More info: https://kubernetes.io/docs/concepts/storage/volumes#secret
+    // +optional
+    string secretName = 1;
+
+    // If unspecified, each key-value pair in the Data field of the referenced
+    // Secret will be projected into the volume as a file whose name is the
+    // key and content is the value. If specified, the listed keys will be
+    // projected into the specified paths, and unlisted keys will not be
+    // present. If a key is specified which is not present in the Secret,
+    // the volume setup will error unless it is marked optional. Paths must be
+    // relative and may not contain the '..' path or start with '..'.
+    // +optional
+    repeated KeyToPath items = 2;
+
+    // Optional: mode bits used to set permissions on created files by default.
+    // Must be an octal value between 0000 and 0777 or a decimal value between 0
+    // and 511. YAML accepts both octal and decimal values, JSON requires decimal
+    // values for mode bits. Defaults to 0644. Directories within the path are not
+    // affected by this setting. This might be in conflict with other options that
+    // affect the file mode, like fsGroup, and the result can be other mode bits
+    // set. +optional
+    int32 defaultMode = 3;
+
+    // Specify whether the Secret or its keys must be defined
+    // +optional
+    bool optional = 4;
+}
+
+// KeyToPath maps a string key to a path within a volume.
+message KeyToPath {
+    // The key to project.
+    string key = 1;
+    // The relative path of the file to map the key to.
+    // May not be an absolute path.
+    // May not contain the path element '..'.
+    // May not start with the string '..'.
+    string path = 2;
+    // Optional: mode bits to use on this file, should be a value between 0
+    // and 0777. If not specified, the volume defaultMode will be used.
+    // This might be in conflict with other options that affect the file
+    // mode, like fsGroup, and the result can be other mode bits set.
+    // +optional
+    int32 mode = 3;
+}
+
+// PersistentVolumeClaimVolumeSource references the user's PVC in the same
+// namespace. This volume finds the bound PV and mounts that volume for the pod.
+// A PersistentVolumeClaimVolumeSource is, essentially, a wrapper around another
+// type of volume that is owned by someone else (the system).
+message PersistentVolumeClaimVolumeSource {
+    // ClaimName is the name of a PersistentVolumeClaim in the same namespace as
+    // the pod using this volume. More info:
+    // https://kubernetes.io/docs/concepts/storage/persistent-volumes#persistentvolumeclaims
+    string claimName = 1;
+
+    // Will force the ReadOnly setting in VolumeMounts.
+    // Default false.
+    // +optional
+    bool readOnly = 2;
+}
+
+// Adapts a ConfigMap into a volume.
+//
+// The contents of the target ConfigMap's Data field will be presented in a
+// volume as files using the keys in the Data field as the file names, unless
+// the items element is populated with specific mappings of keys to paths.
+// ConfigMap volumes support ownership management and SELinux relabeling.
+message ConfigMapVolumeSource {
+    string name = 1;
+    // If unspecified, each key-value pair in the Data field of the referenced
+    // ConfigMap will be projected into the volume as a file whose name is the
+    // key and content is the value. If specified, the listed keys will be
+    // projected into the specified paths, and unlisted keys will not be
+    // present. If a key is specified which is not present in the ConfigMap,
+    // the volume setup will error unless it is marked optional. Paths must be
+    // relative and may not contain the '..' path or start with '..'.
+    // +optional
+    repeated KeyToPath items = 2;
+
+    // Optional: mode bits used to set permissions on created files by default.
+    // Must be an octal value between 0000 and 0777 or a decimal value between 0
+    // and 511. YAML accepts both octal and decimal values, JSON requires decimal
+    // values for mode bits. Defaults to 0644. Directories within the path are not
+    // affected by this setting. This might be in conflict with other options that
+    // affect the file mode, like fsGroup, and the result can be other mode bits
+    // set. +optional
+    int32 defaultMode = 3;
+
+    // Specify whether the ConfigMap or its keys must be defined
+    // +optional
+    bool optional = 4;
+}
+
+message KantaloupeTree {
+    repeated KantaloupeTreeNode data = 1;
+}
+
+message KantaloupeTreeNode {
+    // name represents the cluster name.
+    string name                          = 1;
+    int32 value                          = 2;
+    repeated KantaloupeTreeNode children = 3;
+}
+
+message CreateKantaloupeflowRequest {
+    string cluster      = 1;
+    Kantaloupeflow data = 2;
+}
+
+message GetKantaloupeflowRequest {
+    string cluster   = 1;
+    string namespace = 2;
+    string name      = 3;
+}
+
+// Get Kantaloupeflow information List.
+message ListKantaloupeflowsRequest {
+    // Name is the user-specified identifier.
+    // This field may not be updated.
+    string name = 1;
+
+    string cluster = 2;
+
+    string namespace = 3;
+
+    KantaloupeflowState status = 4;
+
+    // Page requested.
+    int32 page = 5;
+
+    // Size per page requested.
+    int32 page_size = 6;
+
+    // SortBy determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortBy sort_by = 7;
+
+    // OrderBy determines the cluster list order.
+    kantaloupe.dynamia.ai.api.types.SortDir sort_dir = 8;
+}
+
+// Kantaloupeflows information List.
+message ListKantaloupeflowsResponse {
+    // data The data field is the YAML details
+    repeated Kantaloupeflow items = 1;
+
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}
+
+message DeleteKantaloupeflowRequest {
+    string cluster   = 1;
+    string namespace = 2;
+    string name      = 3;
+}
+
+message UpdateKantaloupeflowGPUMemoryRequest {
+    string cluster   = 1;
+    string namespace = 2;
+    string name      = 3;
+    int32 gpumemory  = 4;
+}
+
+message GPU {
+    string uuid  = 1;
+    string model = 2;
+    int32 memory = 3;
+    float core   = 4;
+}
+
+message GetKantaloupeflowResponse {
+    Kantaloupeflow kantaloupeflow = 1;
+
+    string node = 2;
+}
+
+message GetKantaloupeflowConditionsRequest {
+    string cluster   = 1;
+    string namespace = 2;
+    string name      = 3;
+}
+
+message ConditionStrings {
+    string type    = 1;
+    string status  = 2;
+    string message = 3;
+}
+
+message GetKantaloupeflowConditionsResponse {
+    repeated ConditionStrings conditions = 1;
+}

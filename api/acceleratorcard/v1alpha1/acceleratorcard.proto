@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.acceleratorcard.v1alpha1;
+
+import "api/types/page.proto";
+import "api/clusters/v1alpha1/cluster.proto";
+import "api/core/v1alpha1/node.proto";
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/acceleratorcard/v1alpha1";
+
+enum AcceleratorCardState {
+    // The acceleratorcard state is unspecified.
+    ACCELERATORCARD_STATE_UNSPECIFIED = 0;
+    HEALTH                            = 1;
+    ERROR                             = 2;
+}
+
+message AcceleratorCard {
+    string uuid                = 1;
+    string node                = 2;
+    string model               = 3;
+    AcceleratorCardState state = 4;
+    double temperature         = 5;
+    double power               = 6;
+    // Provider represents the cloud provider name of the member cluster.
+    kantaloupe.dynamia.ai.api.clusters.v1alpha1.ClusterProvider provider = 7;
+    // ClusterType represents the type of cluster.
+    kantaloupe.dynamia.ai.api.clusters.v1alpha1.ClusterType type = 8;
+    // IP Address reachable to the node.
+    repeated kantaloupe.dynamia.ai.api.core.v1alpha1.NodeAddress nodeAddresses = 9;
+    // gpu_total is gpu total number.
+    int32 gpu_core_total = 10;
+    // gpu_allocated is gpu allocated number.
+    int32 gpu_core_allocated = 11;
+    // gpu_core_usage is the usage rate of gpu
+    int32 gpu_core_usage = 12;
+    // gpu_memory_total is all gpu memory number with node. Unit: byte.
+    int64 gpu_memory_total = 13;
+    // gpu_memory_allocated is allocated gpu memory number with node. Unit: byte
+    int64 gpu_memory_allocated = 14;
+    // gpu_memory_allocatable is allocatable gpu memory number with node. Unit: byte
+    int64 gpu_memory_allocatable = 15;
+    // gpu_memory_usage is the usage rate of gpu video memory
+    int64 gpu_memory_usage = 16;
+    // workload_limit is the limit of workloads can ran on the card
+    int32 workload_limit = 17;
+}
+
+message ListAcceleratorCardsRequest {
+    string cluster = 1;
+    // Name is the user-specified identifier.
+    // This field may not be updated.
+    string uuid = 2;
+    // Specify modelname of the acceleratorcard.
+    string model = 3;
+    // Specify node of the acceleratorcard.
+    string node = 4;
+    // "Health" or "Error"
+    AcceleratorCardState state = 5;
+    // Page requested.
+    int32 page = 6;
+    // Size per page requested.
+    int32 page_size = 7;
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 8;
+}
+
+// Clusters information List.
+message ListAcceleratorCardsResponse {
+    // data The data field is the YAML details
+    repeated AcceleratorCard items = 1;
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}
+
+message GetAcceleratorCardRequest {
+    string cluster = 1;
+    string node    = 2;
+    string uuid    = 3;
+}
+
+message ListModelNamesRequest {
+    string cluster = 1;
+}
+
+message ListModelNamesResponse {
+    repeated string model_names = 1;
+}

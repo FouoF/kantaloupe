@@ -1,0 +1,24 @@
+{{- if .Values.enableGateway }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  annotations:
+  name: {{ include "kantaloupe.apiserver.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  parentRefs:
+  - group: gateway.networking.k8s.io
+    kind: Gateway
+    name: kantaloupe
+  rules:
+  - backendRefs:
+    - group: ""
+      kind: Service
+      name: {{ include "kantaloupe.apiserver.fullname" . }}
+      port: 8000
+      weight: 1
+    matches:
+    - path:
+        type: PathPrefix
+        value: /apis
+{{- end -}}

@@ -1,0 +1,206 @@
+issues:
+  exclude-use-default: true
+  exclude-case-sensitive: false
+  exclude-dirs-use-default: true
+  max-issues-per-linter: 0
+  uniq-by-line: true
+  max-same-issues: 0
+  exclude-dirs:
+    - test/
+    - vendor/
+    - hack/
+
+run:
+  timeout: 40m
+  # The default concurrency value is the number of available CPU.
+  concurrency: 4
+  # One of 'readonly' and 'vendor'.
+  #  - readonly: the go command is disallowed from the implicit automatic updating of go.mod described above.
+  #              Instead, it fails when any changes to go.mod are needed. This setting is most useful to check
+  #              that go.mod does not need updates, such as in a continuous integration and testing system.
+  #  - vendor: the go command assumes that the vendor directory holds the correct copies of dependencies and ignores
+  #            the dependency descriptions in go.mod.
+  modules-download-mode: readonly
+
+linters-settings:
+  staticcheck:
+    checks: ["-SA1019"] ## TODO: deprecated
+  cyclop:
+    # The maximal code complexity to report.
+    # Default: 10
+    max-complexity: 40
+  lll:
+    # Max line length, lines longer will be reported.
+    # '\t' is counted as 1 character by default, and can be changed with the tab-width option.
+    # Default: 120.
+    line-length: 130
+    # Tab width in spaces.
+    # Default: 1
+    tab-width: 1
+  dupl:
+    threshold: 800
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    # exclude: .errcheckignore
+  errorlint:
+    errorf: true
+    asserts: true
+    comparison: true
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - commentedOutCode
+      - whyNoLint
+    settings:
+      hugeParam:
+        sizeThreshold: 80
+      rangeExprCopy:
+        sizeThreshold: 512
+      rangeValCopy:
+        sizeThreshold: 128
+  godot:
+    scope: declarations
+    capital: false
+  gofmt:
+    simplify: true
+  gofumpt:
+    extra-rules: true
+  goimports:
+    local-prefixes: github.com/dynamia-ai/kantaloupe
+  gocyclo:
+    # minimal code complexity to report, 30 by default (but we recommend 10-20)
+    min-complexity: 40
+  nestif:
+    min-complexity: 20
+  revive:
+    # Maximum number of open files at the same time.
+    # See https://github.com/mgechev/revive#command-line-flags
+    # Defaults to unlimited.
+    max-open-files: 2048
+    # When set to false, ignores files with "GENERATED" header, similar to golint.
+    # See https://github.com/mgechev/revive#available-rules for details.
+    # Default: false
+    ignore-generated-header: true
+    # Sets the default severity.
+    # See https://github.com/mgechev/revive#configuration
+    # Default: warning
+    severity: warning
+    # Enable all available rules.
+    # Default: false
+    enable-all-rules: false
+    rules:
+      # currently 400+ cases that do not meet the rules
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#add-constant
+      - name: add-constant
+        disabled: true
+      # currently 5000+ cases out of limit 110
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#line-length-limit
+      - name: line-length-limit
+        disabled: false
+        arguments: [7534]
+      # currently cyclomatic range 1-60+
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#cyclomatic
+      - name: cyclomatic
+        disabled: false
+        arguments: [77]
+      # currently 40+ cases function length out of limit 50
+      # https://github.com/mgechev/revive/blob/master/RULES_DESCRIPTIONS.md#function-length
+      - name: function-length
+        disabled: false
+        arguments: [180, 0]
+      - name: blank-imports
+        disabled: false
+      - name: context-as-argument
+        disabled: false
+      - name: dot-imports
+        disabled: false
+      - name: empty-block
+        disabled: false
+      - name: error-naming
+        disabled: false
+      - name: error-return
+        disabled: false
+      - name: error-strings
+        disabled: false
+      - name: errorf
+        disabled: false
+      - name: exported
+        disabled: false
+      - name: indent-error-flow
+        disabled: false
+      - name: range
+        disabled: false
+      - name: receiver-naming
+        disabled: false
+      - name: redefines-builtin-id
+        disabled: false
+      - name: time-naming
+        disabled: false
+      - name: var-naming
+        disabled: false
+      - name: var-declaration
+        disabled: false
+      - name: unexported-return
+        disabled: false
+      - name: unreachable-code
+        disabled: false
+      - name: unused-parameter
+        disabled: false
+  gosec:
+    # refer https://golangci-lint.run/usage/linters#gosec
+    excludes:
+      - G115
+    config:
+      G101:
+        # Regexp pattern for variables and constants to find.
+        # Default: "(?i)passwd|pass|password|pwd|secret|token|pw|apiKey|bearer|cred"
+        pattern: "(?i)passwd|pass|password|pwd|secret|token|pw|apiKey|bearer|cred|crt|cert|certificate"
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  sort-results: true
+
+linters:
+  enable-all: true
+  disable:
+    - interfacebloat
+    - lll
+    - depguard
+    - wrapcheck
+    - perfsprint
+    - gocritic
+    - wsl
+    - godox
+    - errcheck
+    - nlreturn
+    - forcetypeassert
+    - gochecknoglobals
+    - gci
+    - varnamelen
+    - exhaustruct
+    - mnd
+    - ireturn
+    - gochecknoinits
+    - paralleltest
+    - canonicalheader
+    - testpackage
+    - gomoddirectives
+    - funlen
+    - containedctx
+    - err113
+    - gocognit
+    - protogetter
+    - exhaustive
+    - contextcheck
+    - tagliatelle

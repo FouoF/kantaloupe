@@ -1,0 +1,23 @@
+apiVersion: kantaloupeflow.dynamia.io/v1alpha1
+kind: KantaloupeFlow
+metadata:
+  name: test
+  namespace: kantaloupe-system
+spec:
+  plugins:
+    - ssh
+    - vscode
+    - jupyter
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: test
+    spec:
+      containers:
+        - name: pytorch
+          image: release.daocloud.io/zestu/pytorch:2.5.1-cuda12.4-cudnn9-runtime
+          command:
+          - /bin/sh
+          - -c
+          -  trap 'exit' TERM; sleep infinity & wait

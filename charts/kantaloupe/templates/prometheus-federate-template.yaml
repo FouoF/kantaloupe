@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: ScrapeConfig
+metadata:
+  name: kantaloupe-local-cluster
+  namespace: monitoring
+  labels:
+    release: should-not-exist
+spec:
+  jobName: kantaloupe-federate
+  metricsPath: /federate
+  honorLabels: true
+  scrapeInterval: 15s
+  params:
+    match[]:
+       - '{job="nvidia-dcgm-exporter"}'
+       - '{job="metax-mx-exporter"}'
+       - '{job="hami-scheduler"}'
+       - '{job="hami-device-plugin-monitor"}'
+       - '{job="npu-exporter"}'
+       - '{__name__="container_cpu_usage_seconds_total"}'
+       - '{__name__="kube_pod_container_resource_limits"}'
+       - '{__name__="kube_node_status_allocatable"}'       
+       - '{__name__="container_memory_rss"}'
+  staticConfigs:
+    - targets: ["dummy:0"]
+  relabelings:
+    - targetLabel: cluster
+      replacement: local-cluster

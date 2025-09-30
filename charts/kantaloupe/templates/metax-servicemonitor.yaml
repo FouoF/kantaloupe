@@ -1,0 +1,36 @@
+{{- if .Values.monitoring.vendorServiceMonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    release: {{ ternary "prometheus" "should-not-exists" ( .Values.monitoring.vendorServiceMonitor.enableMetaxServicemonitor ) }}
+  name: metax-mx-exporter-monitor
+  namespace: monitoring
+spec:
+  endpoints:
+  - interval: 15s
+    metricRelabelings:
+    - action: replace
+      regex: ^(.+)-[a-z0-9]{9,}-[a-z0-9]+$
+      replacement: $1
+      sourceLabels:
+      - exported_pod
+      targetLabel: deployment_name
+    - action: replace
+      separator: /
+      sourceLabels:
+      - exported_namespace
+      - deployment_name
+      targetLabel: deployment
+    - targetLabel: cluster
+      replacement: local-cluster
+    path: /metrics
+    port: metrics
+  namespaceSelector:
+    matchNames:
+    - metax-monitor
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: metax
+      app.kubernetes.io/name: mx-exporter
+{{- end -}}

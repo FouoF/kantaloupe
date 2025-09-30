@@ -1,0 +1,58 @@
+# Detect system language or fallback to English
+LANG_CODE=${TARGET_LANG%%.*}
+LANG_CODE=${LANG_CODE:-zh_CN}
+case "$LANG_CODE" in
+  zh_CN*)
+    TIPS_TITLE="温馨提示:"
+    DIR_HEADER="目录"
+    NAME_HEADER="名称"
+    DESC_HEADER="说明"
+    SYSTEM_DISK="系统盘"
+    SYSTEM_DISK_DESC="安装及配置环境的目录，可存放代码等。会随着释放实例消失，当前暂不支持保存系统盘"
+    DATA_STORAGE="文件存储"
+    DATA_STORAGE_DESC="用于存储数据的目录，支持持久化，需确保正确挂载"
+    MODEL_FILES="模型文件"
+    MODEL_FILES_DESC="平台在容器实例中提供公开的模型文件，用户可直接调用，快速部署 AI 应用"
+    SYSTEM_INFO="系统信息"
+    FILESYSTEM_INFO="文件系统信息"
+    OS_VERSION="OS 版本"
+    KERNEL="内核"
+    IP_ADDR="IP 地址"
+    HOSTNAME="主机名"
+    CPU_MODEL="CPU 型号"
+    CPU_THREADS="CPU 线程"
+    MEMORY="内存"
+    MEMORY_USED="已使用"
+    GPU="GPU"
+    CUDA="CUDA"
+    NOT_INSTALLED="未安装"
+    MOUNTED="挂载路径"
+    ;;
+  *)
+    # Default to English
+    TIPS_TITLE="Friendly Reminder:"
+    DIR_HEADER="Directory"
+    NAME_HEADER="Name"
+    DESC_HEADER="Description"
+    SYSTEM_DISK="System Disk"
+    SYSTEM_DISK_DESC="Directory for installations, environment setup, and code storage. \n\t\t\t\t\t  The system disk will be released along with the container instance."
+    DATA_STORAGE="Data Storage"
+    DATA_STORAGE_DESC="Persistent storage directory, ensure proper mounting."
+    MODEL_FILES="Model Files"
+    MODEL_FILES_DESC="Platform provides public model files in container instances, allowing users to quickly deploy AI applications."
+    SYSTEM_INFO="System Info"
+    FILESYSTEM_INFO="Filesystem Info"
+    OS_VERSION="OS Version"
+    KERNEL="Kernel"
+    IP_ADDR="IP addr"
+    HOSTNAME="Hostname"
+    CPU_MODEL="CPU Model"
+    CPU_THREADS="CPU Threads"
+    MEMORY="Memory"
+    MEMORY_USED="Used"
+    GPU="GPU"
+    CUDA="CUDA"
+    NOT_INSTALLED="Not Installed"
+    MOUNTED="Mounted"
+    ;;
+esac

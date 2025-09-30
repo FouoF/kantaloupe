@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kantaloupe.ui.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: {{ include "kantaloupe.ui.fullname" . }}
+    {{- if .Values.ui.labels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.ui.labels "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.ui.replicaCount }}
+  selector:
+    matchLabels:
+      control-plane: {{ include "kantaloupe.ui.fullname" . }}
+  template:
+    metadata:
+      {{- if .Values.ui.podAnnotations }}
+      annotations:
+      {{- include "common.tplvalues.render" (dict "value" .Values.ui.podAnnotations "context" $) | nindent 8 }}
+      {{- end }}
+      labels:
+        control-plane: {{ include "kantaloupe.ui.fullname" . }}
+        {{- if .Values.ui.podLabels }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.ui.podLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "kantaloupe.ui.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: {{ include "kantaloupe.ui.fullname" . }}
+          image: {{ include "kantaloupe.ui.image" . }}
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.ui.service.port }}
+              protocol: TCP
+          {{- if .Values.ui.resources }}
+          resources: {{- toYaml .Values.ui.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ui.livenessProbe.enabled}}
+          livenessProbe: {{- omit .Values.ui.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ui.readinessProbe.enabled}}
+          readinessProbe: {{- omit .Values.ui.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+      {{- if .Values.ui.affinity }}
+      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.ui.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ui.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.ui.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ui.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.ui.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "common.names.fullname" . }}
+      terminationGracePeriodSeconds: 10

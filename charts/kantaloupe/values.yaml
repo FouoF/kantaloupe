@@ -1,0 +1,221 @@
+# Default values for kantaloupe.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+## @section Global configuration
+## @param global.imageRegistry Global Docker image registry
+## @param global.imagePullSecrets Global Docker image pull secrets
+global:
+  ## @param global.imageRegistry Global Docker image registry
+  imageRegistry: ""
+  ## E.g.
+  ## imagePullSecrets:
+  ##   - myRegistryKeySecretName
+  ## @param global.imagePullSecrets Global Docker image pull secrets
+  imagePullSecrets: []
+
+## @section Pre-Hook configuration
+## @param installCRDs define flag whether to install CRD resources
+installCRDs: true
+
+enableGateway: true
+gatewayIPAddress: ""
+gatewayListenPort: 80
+hamiNamespace: "hami-system"
+
+# controller manager config
+controllerManager:
+  ## @section controllerManager configuration
+  ## @param labels controllerManager labels
+  labels: {}
+  ## @param replicaCount controllerManager target replica count
+  replicaCount: 1
+  ## @param podAnnotations controllerManager pod annotations
+  podAnnotations: {}
+  ## @param podLabels controllerManager pod labels
+  podLabels: {}
+  ## @param image.registry kantaloupe image registry
+  ## @param image.repository kantaloupe image repository
+  ## @param image.tag kantaloupe image tag (immutable tags are recommended)
+  ## @param image.pullPolicy kantaloupe image pull policy
+  ## @param image.pullSecrets Specify docker-registry secret names as an array
+  image:
+    registry: ghcr.io
+    repository: dynamia-ai/kantaloupe-controller-manager
+    tag: "v0.5.0"
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+  ## @param resources controllerManager resource requests and limits
+  resources: {}
+    # If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  ## @param nodeSelector controllerManager node labels for pod assignment
+  nodeSelector: {}
+  ## @param affinity controllerManager affinity settings
+  affinity: {}
+  ## @param tolerations controllerManager tolerations for pod assignment
+  tolerations: {}
+  ## @param livenessProbe.enabled Enable livenessProbe on controllerManager containers
+  livenessProbe:
+    enabled: false
+  ## @param readinessProbe.enabled Enable readinessProbe on controllerManager containers
+  readinessProbe:
+    enabled: false
+
+# apiserver config
+apiserver:
+  ## @section apiserver configuration
+  ## @param labels apiserver labels
+  labels: {}
+  ## @param replicaCount apiserver target replica count
+  replicaCount: 1
+  ## @param podAnnotations apiserver pod annotations
+  podAnnotations: {}
+  ## @param podLabels apiserver pod labels
+  podLabels: {}
+  ## @param image.registry kantaloupe image registry
+  ## @param image.repository kantaloupe image repository
+  ## @param image.tag kantaloupe image tag (immutable tags are recommended)
+  ## @param image.pullPolicy kantaloupe image pull policy
+  ## @param image.pullSecrets Specify docker-registry secret names as an array
+  image:
+    registry: ghcr.io
+    repository: dynamia-ai/kantaloupe-apiserver
+    tag: "v0.5.0"
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+  ## @param resources apiserver resource requests and limits
+  resources: {}
+    # If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  ## @param nodeSelector apiserver node labels for pod assignment
+  nodeSelector: {}
+  ## @param affinity apiserver affinity settings
+  affinity: {}
+  ## @param tolerations controllerManager tolerations for pod assignment
+  tolerations: {}
+  ## @param livenessProbe.enabled Enable livenessProbe on ui containers
+  livenessProbe:
+    enabled: false
+  ## @param readinessProbe.enabled Enable readinessProbe on ui containers
+  readinessProbe:
+    enabled: false
+  ## @param  service config
+  service:
+    type: NodePort
+    nodePort:
+    port: 8000
+
+# ui config
+ui:
+  ## @section ui configuration
+  ## @param labels ui labels
+  labels: {}
+  ## @param replicaCount ui target replica count
+  replicaCount: 1
+  ## @param podAnnotations ui pod annotations
+  podAnnotations: {}
+  ## @param podLabels ui pod labels
+  podLabels: {}
+  ## @param image.registry kantaloupe image registry
+  ## @param image.repository kantaloupe image repository
+  ## @param image.tag kantaloupe image tag (immutable tags are recommended)
+  ## @param image.pullPolicy kantaloupe image pull policy
+  ## @param image.pullSecrets Specify docker-registry secret names as an array
+  image:
+    registry: ghcr.io
+    repository: dynamia-ai/kantaloupe-ui
+    tag: "main"
+    ## Specify a imagePullPolicy
+    ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
+    ## ref: https://kubernetes.io/docs/user-guide/images/#pre-pulling-images
+    ##
+    pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be manually created in the namespace.
+    ## Example:
+    ## pullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    pullSecrets: []
+  ## @param resources apiserver resource requests and limits
+  resources: {}
+    # If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+  ## @param nodeSelector apiserver node labels for pod assignment
+  nodeSelector: {}
+  ## @param affinity apiserver affinity settings
+  affinity: {}
+  ## @param tolerations controllerManager tolerations for pod assignment
+  tolerations: {}
+  ## @param livenessProbe.enabled Enable livenessProbe on ui containers
+  livenessProbe:
+    enabled: false
+  ## @param readinessProbe.enabled Enable readinessProbe on ui containers
+  readinessProbe:
+    enabled: false
+  ## @param  service config
+  service:
+    type: NodePort
+    nodePort: 31300
+    port: 80
+
+## @param cloudshellImage.registry cloudshell image registry
+## @param cloudshellImage.repository cloudshell image repository
+## @param cloudshellImage.tag cloudshell image tag (immutable tags are recommended)
+cloudshellImage:
+  registry: ghcr.io
+  repository: cloudtty/cloudshell
+  tag: "v0.8.2"
+
+## @param using universe metrics
+monitoring:
+  hamiServiceMonitor:
+    enabled: true
+  vendorServiceMonitor:
+    ## @param whether to automatically create servicemonitors for vendor exporters
+    enabled: true
+    ## @param whether to create nvidia servicemonitors for nvidia exporters in local cluster
+    enableNvidiaServicemonitor: true
+    ## @param whether to create metax servicemonitors for metax exporters in local cluster
+    enableMetaxServicemonitor: false
+    ## @param whether to create ascend servicemonitors for ascend exporters in local cluster
+    enableAscendServicemonitor: false

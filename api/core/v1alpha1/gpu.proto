@@ -1,0 +1,146 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.core.v1alpha1;
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/core/v1alpha1;v1alpha1";
+
+message GPU {
+    // uid is gpu unique id
+    string uid = 1;
+    // name is gpu name
+    string name = 2;
+    // gpu_mode is gpu model
+    GPUModel gpu_mode = 3;
+    // gpu_info is some gpu metadata
+    GPUInfo gpu_info = 4;
+    // if GPU model is mig mig_spec_list will have values
+    repeated MigSpec mig_spec_list = 5;
+}
+
+message GPUInfo {
+    // gpu model
+    // e.g. NVIDIA A800 80GB PCIe
+    string model_name = 1;
+    // e.g. nvidia0
+    string device = 2;
+    // gpu memory unit: Mi
+    int64 gpu_memory = 3;
+}
+
+enum GPUModel {
+    GPU_MODEL_UNSPECIFIED = 0;
+    // gpu_model_mig gpu model is mig
+    GPU_MODEL_MIG = 1;
+    // gpu_model_gpu gpu model is whole
+    GPU_MODEL_GPU = 2;
+    // gpu_model_gpu gpu model is vgpu
+    GPU_MODEL_VGPU = 3;
+}
+
+message MigSpec {
+    // gpu_i_id is the id of each mig instance after the gpu is in mig mode
+    string gpu_i_id = 1;
+    // gpu_i_profile is the specification of each mig instance after the gpu is in mig mode
+    string gpu_i_profile = 2;
+}
+
+message GPUSummary {
+    // node defines the cluster node name.
+    string node = 1;
+    // vgpu_types defines a array restore vGPU types of the node.
+    repeated string vgpu_types = 2;
+}
+
+message ListNodeGPURequest {
+    string cluster = 1;
+    string node    = 2;
+}
+
+message ListNodeGPUResponse {
+    repeated GPU items = 1;
+}
+
+message UpdateNodeGPUModeRequest {
+    string cluster       = 1;
+    string node          = 2;
+    GPUModel mode        = 3;
+    MIGModeSpec mig_spec = 4;
+}
+
+message UpdateNodeGPUModeResponse {
+    GPUModel mode = 1;
+}
+
+message MIGModeSpec {
+    string config = 1;
+    // single or mixed
+    MIGStrategy strategy = 2;
+}
+
+enum MIGStrategy {
+    // mig_strategy_unspecified unspecified mig strategy
+    MIG_STRATEGY_UNSPECIFIED = 0;
+    // mig_strategy_single single mig strategy
+    MIG_STRATEGY_SINGLE = 1;
+    // mig_strategy_mixed mixed mig strategy
+    MIG_STRATEGY_MIXED = 2;
+}
+
+message ListClusterGPUSummaryRequest {
+    // cluster defines the cluster name.
+    string cluster = 1;
+}
+
+message ListClusterGPUSummaryResponse {
+    // summary defines a array restore GUP type summary of all nodes.
+    repeated GPUSummary summary = 1;
+}
+
+message GetNodeGPUStatsRequest {
+    string cluster = 1;
+    string node    = 2;
+}
+
+message GetNodeGPUStatsResponse {
+    // cluster node gpu mode
+    GPUModel mode = 1;
+    // full gpu stats
+    FullGPUNodeStats full_gpu_stats = 2;
+    // vgpu stats
+    VGPUNodeStats vgpu_stats = 3;
+    // mig stats
+    MIGNodeStats mig_stats = 4;
+}
+
+message FullGPUNodeStats {
+    // Number of physical Gpus
+    int32 total_gpu_number = 1;
+    // Number of allocated Gpus
+    int32 allocated_gpu_number = 2;
+}
+
+message VGPUNodeStats {
+    // Number of physical Gpus
+    int32 physical_gpu_number = 1;
+    // Number of virtual Gpus
+    int32 total_virtual_gpu_number = 2;
+    // Number of allocated virtual Gpus
+    int32 allocated_virtual_gpu_number = 3;
+
+    int64 allocated_compute_power = 4;
+    // total compute power
+    int64 total_compute_power = 5;
+    // Number of gpu memory
+    int64 total_gpu_memory = 6;
+    // Number of allocated gpu memory
+    int64 allocated_gpu_memory = 7;
+}
+
+message MIGNodeStats {
+    // Number of physical Gpus
+    int32 total_gpu_number = 1;
+    // Number of allocated Gpus
+    int32 allocated_gpu_number = 2;
+    // Number of mig
+    int32 total_mig_number = 3;
+}

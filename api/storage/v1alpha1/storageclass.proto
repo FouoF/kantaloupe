@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.storage.v1alpha1;
+
+import "api/types/objectmeta.proto";
+import "api/types/page.proto";
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/storage/v1alpha1;v1alpha1";
+
+// StorageClass describes the parameters for a class of storage for
+// which PersistentVolumes can be dynamically provisioned.
+//
+// StorageClasses are non-namespaced; the name of the storage class
+// according to etcd is in ObjectMeta.Name.
+message StorageClass {
+    // Standard object's metadata.
+    kantaloupe.dynamia.ai.api.types.ObjectMeta metadata = 1;
+
+    // Provisioner indicates the type of the provisioner.
+    string provisioner = 2;
+
+    enum ReclaimPolicy {
+        RECLAIM_AOLICY_UNSPECIFIED = 0;
+
+        // PersistentVolumeReclaimDelete means the volume will be deleted from Kubernetes on release from its claim.
+        // The volume plugin must support Deletion.
+        Delete = 1;
+
+        // PersistentVolumeReclaimRetain means the volume will be left in its current phase (Released) for manual reclamation by the administrator.
+        // The default policy is Retain.
+        Retain = 2;
+    }
+
+    // persistentVolumeReclaimPolicy defines what happens to a persistent volume when released from its claim.
+    // Valid options are Retain (default for manually created PersistentVolumes), Delete (default
+    // for dynamically provisioned PersistentVolumes), and Recycle (deprecated).
+    // Recycle must be supported by the volume plugin underlying this PersistentVolume.
+    // More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#reclaiming
+    // +optional
+    ReclaimPolicy reclaim_policy = 4;
+
+    // storageClassName is the name of StorageClass to which this persistent volume belongs. Empty value
+    // means that this volume does not belong to any StorageClass.
+    // +optional
+    string storage_class_name = 5;
+
+    enum VolumeBindingMode {
+        VOLUME_BINDING_MODE_UNSPECIFIED = 0;
+
+        // VolumeBindingImmediate indicates that PersistentVolumeClaims should be
+        // immediately provisioned and bound.  This is the default mode.
+        Immediate = 1;
+
+        // VolumeBindingWaitForFirstConsumer indicates that PersistentVolumeClaims
+        // should not be provisioned and bound until the first Pod is created that
+        // references the PeristentVolumeClaim.  The volume provisioning and
+        // binding will occur during Pod scheduing.
+        WaitForFirstConsumer = 2;
+    }
+
+    // VolumeBindingMode indicates how PersistentVolumeClaims should be
+    // provisioned and bound.  When unset, VolumeBindingImmediate is used.
+    // This field is only honored by servers that enable the VolumeScheduling feature.
+    // +optional
+    VolumeBindingMode volume_binding_mode = 6;
+
+    // Dynamically provisioned PersistentVolumes of this storage class are
+    // created with these mountOptions, e.g. ["ro", "soft"]. Not validated -
+    // mount of the PVs will simply fail if one is invalid.
+    // +optional
+    repeated string mount_options = 7;
+
+    // Parameters holds the parameters for the provisioner that should
+    // create volumes of this storage class.
+    // +optional
+    map<string, string> parameters = 8;
+
+    // AllowVolumeExpansion shows whether the storage class allow volume expand
+    // +optional
+    bool allowVolumeExpansion = 9;
+}
+
+// ListStorageClassRequest represents the request of list storage class
+message ListStorageClassesRequest {
+    // cluster represents the name of PVC to belongs to.
+    string cluster = 1;
+
+    // Page requested.
+    int32 page = 2;
+
+    // Size per page requested.
+    int32 page_size = 3;
+
+    // Name is used for filter.
+    string name = 4;
+
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 5;
+
+    // LabelSelector is the format after labels.FormatLabels used to filter
+    string label_selector = 6;
+
+    // FieldSelector is the format after labels.FormatLabels used to filter
+    string field_selector = 7;
+
+    // Provisioner is used for fuzzy search by provisioner.
+    string provisioner = 8;
+
+    // ReclaimPolicy is used for fuzzy search by reclaimPolicy.
+    string reclaim_policy = 9;
+
+    // FuzzyName is used to fuzzy search by multiple parameters including name.
+    string fuzzy_name = 10;
+}
+
+// ListPersistentVolumeClaimsRequest represents the response of list storage class
+message ListStorageClassesResponse {
+    // Data describes the common attributes of storage devices
+    // and allows a Source for provider-specific attributes
+    repeated StorageClass items = 1;
+
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}

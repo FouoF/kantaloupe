@@ -1,0 +1,262 @@
+syntax = "proto3";
+package kantaloupe.dynamia.ai.api.core.v1alpha1;
+
+import "api/types/objectmeta.proto";
+import "api/types/page.proto";
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/core/v1alpha1;v1alpha1";
+
+// PersistentVolume (PV) is a storage resource provisioned by an administrator.
+// It is analogous to a node.
+// More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes
+message PersistentVolume {
+    // Standard object's metadata.
+    kantaloupe.dynamia.ai.api.types.ObjectMeta metadata = 1;
+
+    // Spec defines a specification of a persistent volume owned by the cluster.
+    PersistentVolumeSpec spec = 2;
+
+    // PersistentVolumeClaimStatus represents the status of PV claim
+    PersistentVolumeStatus status = 3;
+}
+
+// PersistentVolumeSpec is the specification of a persistent volume.
+message PersistentVolumeSpec {
+    // Capacity is the description of the persistent volume's resources and capacity.
+    string capacity = 1;
+
+    // AccessModes contains all ways the volume can be mounted.
+    repeated PersistentVolumeAccessMode access_modes = 2;
+
+    // PersistentVolumeReclaimPolicy defines what happens to a persistent volume when released from its claim.
+    // Valid options are Retain (default for manually created PersistentVolumes), Delete (default
+    // for dynamically provisioned PersistentVolumes), and Recycle (deprecated).
+    // Recycle must be supported by the volume plugin underlying this PersistentVolume.
+    PersistentVolumeReclaimPolicy persistent_volume_reclaim_policy = 3;
+
+    // MountOptions is the list of mount options, e.g. ["ro", "soft"]. Not validated - mount will
+    // simply fail if one is invalid.
+    repeated string mount_options = 4;
+
+    // VolumeMode defines if a volume is intended to be used with a formatted filesystem
+    // or to remain in raw block state. Value of Filesystem is implied when not included in spec.
+    PersistentVolumeMode volume_mode = 5;
+
+    PersistentVolumeSource persistent_volume_source = 6;
+
+    string storage_class_name = 7;
+}
+
+message PersistentVolumeSource {
+    HostPathVolumeSource host_path = 1;
+    NFSVolumeSource nfs            = 2;
+    LocalVolumeSource local        = 3;
+}
+
+message NFSVolumeSource {
+    string server  = 1;
+    string path    = 2;
+    bool read_only = 3;
+}
+
+message HostPathVolumeSource {
+    string path = 1;
+    string type = 2;
+}
+
+message LocalVolumeSource {
+    string path    = 1;
+    string fs_type = 2;
+}
+
+// PersistentVolumeMode defines if a volume is intended to be used with a formatted filesystem or to remain in raw block state.
+enum PersistentVolumeMode {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    PERSISTENT_VOLUME_MODE_UNSPECIFIED = 0;
+
+    // Block means the volume will not be formatted with a filesystem and will remain a raw block device.
+    Block = 1;
+
+    // Filesystem means the volume will be or is formatted with a filesystem.
+    Filesystem = 2;
+}
+
+// PersistentVolumeReclaimPolicy defines what happens to a persistent volume when released from its claim.
+enum PersistentVolumeReclaimPolicy {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    PERSISTENT_VOLUME_RECLAIM_POLICY_UNSPECIFIED = 0;
+
+    // Recycle means the volume will be recycled back into the pool of unbound persistent volumes on release from its claim.
+    // The volume plugin must support Recycling.
+    Recycle = 1;
+
+    // Delete means the volume will be deleted from Kubernetes on release from its claim.
+    // The volume plugin must support Deletion.
+    Delete = 2;
+
+    // Retain means the volume will be left in its current phase (Released) for manual reclamation by the administrator.
+    // The default policy is Retain.
+    Retain = 3;
+}
+
+// PersistentVolumeAccessMode are the ways the volume can be mounted.
+enum PersistentVolumeAccessMode {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    PERSISTENT_VOLUME_ACCESS_MODE_UNSPECIFIED = 0;
+
+    // ReadWriteOnce can be mounted in read/write mode to exactly 1 host.
+    ReadWriteOnce = 1;
+
+    // ReadOnlyMany can be mounted in read-only mode to many hosts.
+    ReadOnlyMany = 2;
+
+    // ReadWriteMany can be mounted in read/write mode to many hosts.
+    ReadWriteMany = 3;
+
+    // ReadWriteOncePod can be mounted in read/write mode to exactly 1 pod.
+    // ReadWriteOncePod cannot be used in combination with other access modes.
+    ReadWriteOncePod = 4;
+}
+
+enum Phase {
+    PHASE_UNSPECIFIED = 0;
+
+    // used for PersistentVolumes that are not available
+    Pending = 1;
+
+    // used for PersistentVolumes that are not yet bound
+    // Available volumes are held by the binder and matched to PersistentVolumeClaims
+    Available = 2;
+
+    // used for PersistentVolumes that are bound
+    Bound = 3;
+
+    // used for PersistentVolumes where the bound PersistentVolumeClaim was deleted
+    // released volumes must be recycled before becoming available again
+    // this phase is used by the persistent volume claim binder to signal to another process to reclaim the resource
+    Released = 4;
+
+    // used for PersistentVolumes that failed to be correctly recycled or deleted after being released from a claim
+    Failed = 5;
+}
+
+message PersistentVolumeStatus {
+    // Phase indicates if a volume is available, bound to a claim, or released by a claim
+    // +optional
+    Phase phase = 1;
+
+    // A human-readable message indicating details about why the volume is in this state.
+    // +optional
+    string message = 2;
+
+    // Reason is a brief CamelCase string that describes any failure and is meant for machine parsing and tidy display in the CLI
+    // +optional
+    string reason = 3;
+}
+
+// Get the PersistentVolume list in the cluster.
+message ListPersistentVolumesRequest {
+    // Cluster the PersistentVolumes belongs to.
+    string cluster = 1;
+
+    // Name stands for PersistentVolume name, used for fuzzy search.
+    string name = 2;
+
+    // Page requested.
+    int32 page = 3;
+
+    // Size per page requested.
+    int32 page_size = 4;
+
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 5;
+
+    // LabelSelector is the format after labels.FormatLabels used to filter.
+    string label_selector = 6;
+
+    // FieldSelector is the format after labels.FormatLabels used to filter.
+    string field_selector = 7;
+
+    // FuzzyName is used to fuzzy search by cluster name or cluster alias name.
+    string fuzzy_name = 8;
+}
+
+// ListPersistentVolumesResponse returns PersistentVolume list.
+message ListPersistentVolumesResponse {
+    // Items of PersistentVolumes.
+    repeated PersistentVolume items = 1;
+
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}
+
+// Get PersistentVolume in the cluster.
+message GetPersistentVolumeRequest {
+    // Cluster the specified persistentVolume belongs to.
+    string cluster = 1;
+
+    // Name of the specified persistentVolume.
+    string name = 2;
+}
+
+// Get persistentVolume data information in json format.
+message GetPersistentVolumeJSONRequest {
+    // Cluster the specified persistentVolume belongs to.
+    string cluster = 1;
+
+    // Name represents for the persistentVolume name.
+    string name = 2;
+}
+
+// GetPersistentVolumeJSONResponse returns persistentVolume data information in json format.
+message GetPersistentVolumeJSONResponse {
+    // The data is the persistentVolume YAML details.
+    string data = 1;
+}
+
+message GetPersistentVolumeResponse {
+    // The data is the persistentVolume YAML details.
+    PersistentVolume data = 1;
+}
+
+// Create PersistentVolume in the cluster.
+message CreatePersistentVolumeRequest {
+    // Cluster the specified persistentVolume belongs to.
+    string cluster = 1;
+
+    // Data is the persistentVolume YAML details.
+    PersistentVolume data = 2;
+}
+
+// CreatePersistentVolumeResponse returns the created PersistentVolume data information.
+message CreatePersistentVolumeResponse {
+    // Data is the PersistentVolume YAML details.
+    PersistentVolume data = 1;
+}
+
+// Update PersistentVolume in the cluster.
+message UpdatePersistentVolumeRequest {
+    // Cluster the specified persistentVolume belongs to.
+    string cluster = 1;
+
+    // Name of the specified persistentVolume.
+    string name = 2;
+
+    // Data is the persistentVolume YAML details.
+    PersistentVolume data = 3;
+}
+
+// UpdatePersistentVolumeResponse returns the created PersistentVolume data information.
+message UpdatePersistentVolumeResponse {
+    // Data is the PersistentVolume YAML details.
+    PersistentVolume data = 1;
+}
+
+// DeletePersistentVolume deletes a PersistentVolume.
+message DeletePersistentVolumeRequest {
+    // Cluster represents which cluster the PersistentVolume belongs to.
+    string cluster = 1;
+
+    // Name represents for the PersistentVolume name.
+    string name = 2;
+}

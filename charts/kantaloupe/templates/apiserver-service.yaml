@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "kantaloupe.apiserver.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- if .Values.apiserver.labels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.apiserver.labels "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.apiserver.service.type }}
+  ports:
+  - port: {{ .Values.apiserver.service.port }}
+    targetPort: 8000
+    protocol: TCP
+    name: insecure-port
+    nodePort: {{ .Values.apiserver.service.nodePort }}
+  selector:
+    control-plane: {{ include "kantaloupe.apiserver.fullname" . }}
+    {{- if .Values.apiserver.labels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.apiserver.labels "context" $ ) | nindent 4 }}
+    {{- end }}

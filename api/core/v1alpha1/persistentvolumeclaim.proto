@@ -1,0 +1,220 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.core.v1alpha1;
+
+import "api/types/objectmeta.proto";
+import "api/core/v1alpha1/persistentvolume.proto";
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/core/v1alpha1;v1alpha1";
+// PersistentVolumeClaim represents a reference to a PersistentVolume in the same namespace.
+message PersistentVolumeClaim {
+    // Standard object's metadata.
+    kantaloupe.dynamia.ai.api.types.ObjectMeta metadata = 1;
+
+    // PersistentVolumeClaimSpec describes the common attributes of storage devices
+    // and allows a Source for provider-specific attributes
+    PersistentVolumeClaimSpec spec = 2;
+
+    // PersistentVolumeClaimStatus represents the status of PV claim
+    PersistentVolumeClaimStatus status = 3;
+}
+
+// PersistentVolumeClaimSpec describes the common attributes of storage devices
+// and allows a Source for provider-specific attributes
+message PersistentVolumeClaimSpec {
+    // Contains the types of access modes required
+    // +optional
+    repeated PersistentVolumeAccessMode access_modes = 1;
+
+    // A label query over volumes to consider for binding. This selector is
+    // ignored when VolumeName is set
+    // +optional
+    kantaloupe.dynamia.ai.api.types.LabelSelector selector = 2;
+
+    // Resources represents the minimum resources required
+    // If RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements
+    // that are lower than previous value but must still be higher than capacity recorded in the
+    // status field of the claim.
+    // +optional
+    ResourceRequirements resources = 3;  // defined in pod.proto
+
+    // VolumeName is the binding reference to the PersistentVolume backing this
+    // claim. When set to non-empty value Selector is not evaluated
+    // +optional
+    string volume_name = 4;
+
+    // Name of the StorageClass required by the claim.
+    // More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes/#class-1
+    // +optional
+    string storage_class_name = 5;
+
+    enum VolumeMode {
+        VOLUME_MODE_UNSPECIFIED = 0;
+
+        // PersistentVolumeBlock means the volume will not be formatted with a filesystem and will remain a raw block device.
+        Block = 1;
+
+        // PersistentVolumeFilesystem means the volume will be or is formatted with a filesystem.
+        Filesystem = 2;
+    }
+
+    // volumeMode defines what type of volume is required by the claim.
+    // Value of Filesystem is implied when not included in claim spec.
+    // +optional
+    VolumeMode volume_mode = 6;
+
+    // TypedLocalObjectReference contains enough information to let you locate the typed referenced object inside the same namespace.
+    TypedLocalObjectReference data_source = 7;
+
+    // dataSourceRef specifies the object from which to populate the volume with data, if a non-empty
+    // volume is desired. This may be any object from a non-empty API group (non
+    // core object) or a PersistentVolumeClaim object.
+    // When this field is specified, volume binding will only succeed if the type of
+    // the specified object matches some installed volume populator or dynamic
+    // provisioner.
+    // This field will replace the functionality of the dataSource field and as such
+    // if both fields are non-empty, they must have the same value. For backwards
+    // compatibility, when namespace isn't specified in dataSourceRef,
+    // both fields (dataSource and dataSourceRef) will be set to the same
+    // value automatically if one of them is empty and the other is non-empty.
+    // When namespace is specified in dataSourceRef,
+    // dataSource isn't set to the same value and must be empty.
+    // There are three important differences between dataSource and dataSourceRef:
+    //   - While dataSource only allows two specific types of objects, dataSourceRef
+    //     allows any non-core object, as well as PersistentVolumeClaim objects.
+    //   - While dataSource ignores disallowed values (dropping them), dataSourceRef
+    //     preserves all values, and generates an error if a disallowed value is
+    //     specified.
+    //   - While dataSource only allows local objects, dataSourceRef allows objects
+    //     in any namespaces.
+    //
+    // (Beta) Using this field requires the AnyVolumeDataSource feature gate to be enabled.
+    // (Alpha) Using the namespace field of dataSourceRef requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+    // +optional
+    TypedObjectReference data_source_ref = 8;
+
+    // The support expansion  represents this pvc weather support  expansion
+    bool support_expansion = 9;
+
+    // The support snapshot represents this pvc weather support snapshot
+    bool support_snapshot = 10;
+}
+
+enum PVCPhase {
+    PVC_PHASE_UNSPECIFIED = 0;
+
+    // used for PersistentVolumeClaims that are not yet bound
+    PVC_Pending = 1;
+
+    // used for PersistentVolumeClaims that are bound
+    PVC_Bound = 2;
+
+    // used for PersistentVolumeClaims that lost their underlying
+    // PersistentVolume. The claim was bound to a PersistentVolume and this
+    // volume does not exist any longer and all data on it was lost.
+    PVC_Lost = 3;
+}
+
+// PersistentVolumeClaimStatus represents the status of PV claim
+message PersistentVolumeClaimStatus {
+    // Phase represents the current phase of PersistentVolumeClaim
+    // +optional
+    PVCPhase phase = 1;
+
+    // AccessModes contains all ways the volume backing the PVC can be mounted
+    // +optional
+    repeated PersistentVolumeAccessMode access_modes = 2;
+
+    // Represents the actual resources of the underlying volume
+    // +optional
+    ResourceList capacity = 3;  // defined in pod.proto
+
+    // +optional
+    repeated PersistentVolumeClaimCondition conditions = 4;
+
+    // PodName represents the pod to which the PVC belongs
+    repeated string pod_name = 5;
+
+    // snapshotCount represents how many snapshot the PVC has
+    int32 snapshot_count = 6;
+}
+
+// PersistentVolumeClaimConditionType defines the condition of PV claim.
+message PersistentVolumeClaimCondition {
+    // Type of this PersistentVolumeClaimCondition.
+    string type = 1;
+
+    // Status is the current status of PersistentVolumeClaim.
+    string status = 2;
+
+    // Last time we probed the condition.
+    int64 last_probe_time = 3;
+
+    // Last time the condition transitioned from one status to another.
+    int64 last_transition_time = 4;
+
+    // The reason of PersistentVolumeClaimCondition.
+    string reason = 5;
+
+    // The message of PersistentVolumeClaimCondition.
+    string message = 6;
+}
+
+// TypedLocalObjectReference contains enough information to let you locate the typed referenced object inside the same namespace.
+message TypedLocalObjectReference {
+    // APIGroup is the group for the resource being referenced.
+    // If APIGroup is not specified, the specified Kind must be in the core API group.
+    // For any other third-party types, APIGroup is required.
+    string api_group = 1;
+
+    // Kind is the type of resource being referenced.
+    string kind = 2;
+
+    // Name is the name of resource being referenced.
+    string name = 3;
+}
+
+message TypedObjectReference {
+    // APIGroup is the group for the resource being referenced.
+    // If APIGroup is not specified, the specified Kind must be in the core API group.
+    // For any other third-party types, APIGroup is required.
+    // +optional
+    string api_group = 1;
+
+    // Kind is the type of resource being referenced
+    string kind = 2;
+
+    // Name is the name of resource being referenced
+    string name = 3;
+
+    // Namespace is the namespace of resource being referenced
+    // Note that when a namespace is specified, a gateway.networking.k8s.io/ReferenceGrant object is required in the referent namespace to allow that namespace's owner to accept the reference. See the ReferenceGrant documentation for details.
+    // (Alpha) This field requires the CrossNamespaceVolumeDataSource feature gate to be enabled.
+    // +featureGate=CrossNamespaceVolumeDataSource
+    // +optional
+    string namespace = 4;
+}
+
+// ResourceList returns a string representation of a resource list in a human
+// readable format.
+message ResourceList {
+    // Storage is the total storage resource. Unit: byte.
+    string storage = 1;
+}
+
+// ResourceRequirements describes the compute resource requirements.
+message ResourceRequirements {
+    // Limits describes the maximum amount of compute resources allowed.
+    // More info:
+    // https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    // +optional
+    ResourceList limits = 1;
+
+    // Requests describes the minimum amount of compute resources required.
+    // If Requests is omitted for a container, it defaults to Limits if that is
+    // explicitly specified, otherwise to an implementation-defined value. More
+    // info:
+    // https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    // +optional
+    ResourceList requests = 2;
+}

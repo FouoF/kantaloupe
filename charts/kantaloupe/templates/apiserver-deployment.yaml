@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kantaloupe.apiserver.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: {{ include "kantaloupe.apiserver.fullname" . }}
+    {{- if .Values.apiserver.labels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.apiserver.labels "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.apiserver.replicaCount }}
+  selector:
+    matchLabels:
+      control-plane: {{ include "kantaloupe.apiserver.fullname" . }}
+  template:
+    metadata:
+      {{- if .Values.apiserver.podAnnotations }}
+      annotations:
+      {{- include "common.tplvalues.render" (dict "value" .Values.apiserver.podAnnotations "context" $) | nindent 8 }}
+      {{- end }}
+      labels:
+        control-plane: {{ include "kantaloupe.apiserver.fullname" . }}
+        {{- if .Values.apiserver.podLabels }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.apiserver.podLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "kantaloupe.apiserver.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: {{ include "kantaloupe.apiserver.fullname" . }}
+          image: {{ include "kantaloupe.apiserver.image" . }}
+          imagePullPolicy: {{ .Values.apiserver.image.pullPolicy }}
+          command:
+          - /bin/kantaloupe-apiserver
+          - --bind-address=0.0.0.0
+          - --insecure-port=8000
+          - --v=4
+          {{- if .Values.apiserver.resources }}
+          resources: {{- toYaml .Values.apiserver.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.apiserver.livenessProbe.enabled}}
+          livenessProbe: {{- omit .Values.apiserver.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.apiserver.readinessProbe.enabled}}
+          readinessProbe: {{- omit .Values.apiserver.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+      {{- if .Values.apiserver.affinity }}
+      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.apiserver.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.apiserver.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.apiserver.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.apiserver.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.apiserver.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "common.names.fullname" . }}
+      terminationGracePeriodSeconds: 10

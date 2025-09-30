@@ -1,0 +1,153 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.quotas.v1alpha1;
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/quotas/v1alpha1";
+
+import "api/types/objectmeta.proto";
+import "api/types/page.proto";
+
+// QuotaSpec describes a quota's configuration.
+message QuotaSpec {
+    // Hard contains resource names and their maximum allowed values.
+    map<string, string> hard = 1;
+}
+
+// QuotaStatus shows the current status of a quota.
+message QuotaStatus {
+    // Hard is the same as spec.hard.
+    map<string, string> hard = 1;
+
+    // Used shows the current consumption of the quota.
+    map<string, string> used = 2;
+}
+
+// Quota represents a resource quota resource.
+message Quota {
+    // Standard object's metadata.
+    kantaloupe.dynamia.ai.api.types.ObjectMeta metadata = 1;
+
+    // Spec defines the quota configuration.
+    QuotaSpec spec = 2;
+
+    // Status shows the current usage.
+    QuotaStatus status = 3;
+}
+
+// QuotaResponse represents a quota response.
+message QuotaResponse {
+    // Name is the quota name.
+    string name = 1;
+
+    // Namespace where the quota is located.
+    string namespace = 2;
+
+    // CreatedTime is the creation timestamp.
+    int64 created_time = 3;
+
+    // Hard contains resource names and their maximum allowed values.
+    map<string, string> hard = 4;
+
+    // Used shows the current consumption of the quota.
+    map<string, string> used = 5;
+
+    // Labels attached to the quota.
+    map<string, string> labels = 6;
+
+    // Workloads using the quota.
+    repeated string workload = 7;
+
+    bool is_managed = 8;
+}
+
+// ListQuotasRequest defines a request for listing quotas.
+message ListQuotasRequest {
+    // fuzzy matches the quota name.
+    string name = 1;
+    // Optional namespace to filter quotas.
+    // If empty, quotas from all namespaces will be returned.
+    string namespace = 2;
+
+    // Page requested.
+    int32 page = 3;
+
+    // Size per page requested.
+    int32 page_size = 4;
+
+    // Cluster is the cluster name to query.
+    // If empty, the local cluster will be used.
+    string cluster = 5;
+
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 6;
+}
+
+// ListQuotasResponse defines a response for listing quotas.
+message ListQuotasResponse {
+    // Items contains the list of quotas.
+    repeated QuotaResponse items = 1;
+
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}
+
+// DeleteQuotaRequest defines a request for deleting a quota.
+message DeleteQuotaRequest {
+    // Name is the user-specified identifier.
+    string name = 1;
+
+    // Optional namespace to specify where to delete the quota.
+    // If empty, the default namespace will be used.
+    string namespace = 2;
+
+    // Cluster is the cluster name where the quota is located.
+    // If empty, the local cluster will be used.
+    string cluster = 3;
+}
+
+// CreateQuotaRequest defines a request for creating a quota.
+message CreateQuotaRequest {
+    // Name is the user-specified identifier for the quota.
+    string name = 1;
+
+    // Namespace to create the quota in.
+    // If empty, the default namespace will be used.
+    string namespace = 2;
+
+    // Cluster is the cluster name where the quota should be created.
+    // If empty, the local cluster will be used.
+    string cluster = 3;
+
+    // Hard contains resource names and their maximum allowed values.
+    map<string, string> hard = 4;
+}
+
+// UpdateQuotaRequest defines a request for updating a quota.
+message UpdateQuotaRequest {
+    // Name is the user-specified identifier of the quota to update.
+    string name = 1;
+
+    // Namespace where the quota is located.
+    // If empty, the default namespace will be used.
+    string namespace = 2;
+
+    // Cluster is the cluster name where the quota is located.
+    // If empty, the local cluster will be used.
+    string cluster = 3;
+
+    // Hard contains resource names and their maximum allowed values.
+    map<string, string> hard = 4;
+}
+
+message GetQuotaRequest {
+    // Name is the user-specified identifier of the quota to get.
+    string name = 1;
+
+    // Namespace where the quota is located.
+    // If empty, the default namespace will be used.
+    string namespace = 2;
+
+    // Cluster is the cluster name where the quota is located.
+    // If empty, the local cluster will be used.
+    string cluster = 3;
+}

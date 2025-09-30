@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kantaloupe-pip-conf
+  namespace: {{ .Release.Namespace }}
+data:
+  pip.conf: |
+    [global]
+    index-url = https://pypi.tuna.tsinghua.edu.cn/simple
+    [install]
+    trusted-host = https://pypi.tuna.tsinghua.edu.cn

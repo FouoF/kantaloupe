@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.types;
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/types";
+
+// Pagination is for data paging.
+message Pagination {
+    // Total is the total number of referents.
+    int32 total = 1;
+
+    // Page is current page.
+    int32 page = 2;
+
+    // PageSize is the data number shown per page.
+    int32 page_size = 3;
+
+    // Pages is the number of pages.
+    int32 pages = 4;
+}
+
+// SortDir determines the data list order.
+enum SortDir {
+    // Desc stands for descending order.
+    desc = 0;
+
+    // Asc stands for ascending order.
+    asc = 1;
+}
+
+// SortBy determines the data list order reference.
+enum SortBy {
+    // Unspecified is default, no sorting.
+    SORT_BY_UNSPECIFIED = 0;
+
+    // Sort result by name.
+    field_name = 1;
+
+    // Sort result by creationTimestamp.
+    created_at = 6;
+}
+
+message SortOption {
+    // Determine the field to sort.
+    string field = 1;
+
+    // Determine the sort direction.
+    bool asc = 2;
+}

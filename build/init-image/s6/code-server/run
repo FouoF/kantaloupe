@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+if [ ! "${ENABLE_VSCODE+x}" ]; then
+  sleep infinity
+fi
+
+# export PASSWORD=${CODE_SERVER_PASSWRD}
+export PORT=6666
+
+# Start code-server
+exec /usr/local/builtin-script/copy/code-server/bin/code-server --bind-addr=0.0.0.0:6666 --auth=none

@@ -1,0 +1,95 @@
+{{- if .Values.monitoring.hamiServiceMonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hami-scheduler
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  endpoints:
+  - bearerTokenSecret:
+      key: ""
+      name: ""
+    interval: 15s
+    metricRelabelings:
+    - action: replace
+      regex: (.+)
+      sourceLabels:
+      - nodeid
+      targetLabel: node
+    - action: replace
+      regex: (.+)
+      sourceLabels:
+      - nodename
+      targetLabel: node
+    - targetLabel: cluster
+      replacement: local-cluster
+    - sourceLabels: [podname]
+      regex: ^(.+)-[a-z0-9]{9,}-[a-z0-9]+$
+      targetLabel: deployment_name
+      replacement: $1
+      action: replace
+    - sourceLabels: [podnamespace, deployment_name]
+      separator: /
+      targetLabel: deployment
+      action: replace
+    path: /metrics
+    port: monitor
+  jobLabel: app
+  namespaceSelector:
+    matchNames:
+    - {{ .Values.hamiNamespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: hami-scheduler
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: hami-device-plugin
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  endpoints:
+  - bearerTokenSecret:
+      key: ""
+      name: ""
+    interval: 15s
+    metricRelabelings:
+    - action: replace
+      sourceLabels:
+      - podname
+      targetLabel: exported_pod
+    - action: replace
+      sourceLabels:
+      - podnamespace
+      targetLabel: exported_namespace
+    - targetLabel: cluster
+      replacement: local-cluster
+    - sourceLabels: [podname]
+      regex: ^(.+)-[a-z0-9]{9,}-[a-z0-9]+$
+      targetLabel: deployment_name
+      replacement: $1
+      action: replace
+    - sourceLabels: [podnamespace, deployment_name]
+      separator: /
+      targetLabel: deployment
+      action: replace
+    path: /metrics
+    port: monitorport
+    relabelings:
+    - action: replace
+      sourceLabels:
+      - __meta_kubernetes_endpoint_node_name
+      targetLabel: node
+  jobLabel: app
+  namespaceSelector:
+    matchNames:
+    - {{ .Values.hamiNamespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: hami-device-plugin
+{{- end -}}

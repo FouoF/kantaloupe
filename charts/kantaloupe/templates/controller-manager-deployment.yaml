@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kantaloupe.controllerManager.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: {{ include "kantaloupe.controllerManager.fullname" . }}
+    {{- if .Values.controllerManager.labels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.controllerManager.labels "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ .Values.controllerManager.replicaCount }}
+  selector:
+    matchLabels:
+      control-plane: {{ include "kantaloupe.controllerManager.fullname" . }}
+  template:
+    metadata:
+      {{- if .Values.controllerManager.podAnnotations }}
+      annotations:
+      {{- include "common.tplvalues.render" (dict "value" .Values.controllerManager.podAnnotations "context" $) | nindent 8 }}
+      {{- end }}
+      labels:
+        control-plane: {{ include "kantaloupe.controllerManager.fullname" . }}
+        {{- if .Values.controllerManager.podLabels }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.controllerManager.podLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- include "kantaloupe.controllerManager.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: {{ include "kantaloupe.controllerManager.fullname" . }}
+          image: {{ include "kantaloupe.controllerManager.image" . }}
+          imagePullPolicy: {{ .Values.controllerManager.image.pullPolicy }}
+          command:
+          - /bin/kantaloupe-controller-manager
+          - --leader-elect-resource-namespace={{ .Release.Namespace }}
+          - --v=2
+          {{- if .Values.controllerManager.resources }}
+          resources: {{- toYaml .Values.controllerManager.resources | nindent 12 }}
+          {{- end }}
+          {{- if .Values.controllerManager.livenessProbe.enabled}}
+          livenessProbe: {{- omit .Values.controllerManager.livenessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.controllerManager.readinessProbe.enabled}}
+          readinessProbe: {{- omit .Values.controllerManager.readinessProbe "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+      {{- if .Values.controllerManager.affinity }}
+      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.controllerManager.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.controllerManager.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.controllerManager.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.controllerManager.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.controllerManager.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "common.names.fullname" . }}
+      terminationGracePeriodSeconds: 10

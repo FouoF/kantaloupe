@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+if [ ! "${ENABLE_JUPYTER+x}" ]; then
+  sleep infinity
+fi
+export PATH=$PATH:$HOME/.local/bin:/opt/conda/bin
+while [ ! -f /etc/s6/sshd/.sshd_installed ]; do
+    echo "need wait sshd service installed"
+    sleep 1
+done
+
+JUPYTER_MARKER="/etc/s6/jupyterlab/.jupyter_installed"
+if [ -f "$JUPYTER_MARKER" ]; then
+    echo "Jupyter Lab is already installed. Starting Jupyter Lab..."
+else
+    echo "Jupyter Lab is not installed. Installing Jupyter Lab..."
+    bash /usr/local/builtin-script/copy/jupyter.sh
+    if [ $? -eq 0 ]; then
+        touch "$JUPYTER_MARKER"
+        echo "Jupyter Lab installation marker created."
+    else
+        echo "Error: Failed to install Jupyter Lab. Exiting."
+        exit 1
+    fi
+fi
+
+export SHELL=/bin/bash
+# Start Jupyter Lab
+echo "Starting Jupyter Lab..."
+# select the root directory
+cd /root/
+exec jupyter lab --port=5555 --ip=0.0.0.0 --no-browser --allow-root --NotebookApp.token=${JUPYTER_TOKEN} --NotebookApp.password='' --NotebookApp.base_url=${JUPYTER_BASE_URL} --NotebookApp.notebook_dir=/root/

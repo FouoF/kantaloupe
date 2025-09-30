@@ -1,0 +1,300 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ .Release.Name }}-prometheus-rules
+  namespace: monitoring
+  labels:
+    release: prometheus
+    role: recording-rules
+spec:
+  groups:
+  - name: hami
+    interval: 15s
+    rules:
+    - record: kantaloupe_gpu_mem_total
+      expr: label_replace(GPUDeviceMemoryLimit/1024/1024, "UUID", "$1", "deviceuuid", "(.*)") 
+    - record: kantaloupe_gpu_core_total
+      expr: label_replace(GPUDeviceCoreLimit, "UUID", "$1", "deviceuuid", "(.*)")
+    - record: kantaloupe_gpu_mem_allocated
+      expr: label_replace(GPUDeviceMemoryAllocated/1024/1024, "UUID", "$1", "deviceuuid", "(.*)")
+    - record: kantaloupe_gpu_core_allocated
+      expr: label_replace(GPUDeviceCoreAllocated, "UUID", "$1", "deviceuuid", "(.*)")
+  - name: workload
+    interval: 15s
+    rules:
+    - record: kantaloupe_workload_cpu_allocated
+      expr: kube_pod_container_resource_limits{resource="cpu"}
+    - record: kantaloupe_workload_mem_allocated
+      expr: kube_pod_container_resource_limits{resource="memory"}
+    - record: kantaloupe_workload_cpu_used
+      expr: sum by (pod, cluster, node, namespace) (irate(container_cpu_usage_seconds_total{container="", id=~"/kubepods.*"}[5m]))
+    - record: kantaloupe_workload_mem_used
+      expr: sum(container_memory_rss{container="", id=~"/kubepods.*"}) by (pod, cluster, node, namespace)
+  # nvidia metrics
+  - name: nvidia
+    labels: 
+      vendor: nvidia
+    interval: 15s
+    rules:
+    - record: kantaloupe_gpu_temp
+      expr: label_replace(DCGM_FI_DEV_GPU_TEMP, "node", "$1", "Hostname", "(.*)")
+    - record: kantaloupe_gpu_power
+      expr: label_replace(DCGM_FI_DEV_POWER_USAGE, "node", "$1", "Hostname", "(.*)")
+    - record: kantaloupe_gpu_mem_used
+      expr: label_replace(DCGM_FI_DEV_FB_USED, "node", "$1", "Hostname", "(.*)")
+    - record: kantaloupe_gpu_core_used
+      expr: label_replace(DCGM_FI_DEV_GPU_UTIL, "node", "$1", "Hostname", "(.*)")
+    - record: kantaloupe_gpu_errors
+      expr: label_replace(DCGM_FI_DEV_XID_ERRORS, "node", "$1", "Hostname", "(.*)")
+    - record: kantaloupe_workload_gpumem_used
+      expr: label_replace(Device_memory_desc_of_container/1024/1024, "UUID", "$1", "deviceuuid", "(.*)")
+    - record: kantaloupe_workload_gpucore_used
+      expr: label_replace(Device_utilization_desc_of_container, "UUID", "$1", "deviceuuid", "(.*)")
+    - record: kantaloupe_workload_gpucore_allocated
+      expr: label_replace(vGPUCoreAllocated, "UUID", "$1", "deviceuuid", "(.*)")
+    - record: kantaloupe_workload_gpumem_allocated
+      expr: label_replace(vGPUMemoryAllocated/1024/1024, "UUID", "$1", "deviceuuid", "(.*)")
+  # ascend metrics
+  - name: ascend
+    labels: 
+      vendor: ascend
+    interval: 15s
+    rules:
+    - record: kantaloupe_gpu_temp
+      expr: |
+        label_replace(
+        label_replace(npu_chip_info_hbm_temperature, "modelName", "$1", "model_name", "(.*)"),
+        "UUID",
+        "$1",
+        "vdie_id",
+        "(.*)"
+        )
+    - record: kantaloupe_gpu_power
+      expr: |
+        label_replace(
+        label_replace(npu_chip_info_power, "modelName", "$1", "model_name", "(.*)"),
+        "UUID",
+        "$1",
+        "vdie_id",
+        "(.*)"
+        )
+    - record: kantaloupe_gpu_mem_used
+      expr: |
+        label_replace(
+        label_replace(npu_chip_info_hbm_used_memory, "modelName", "$1", "model_name", "(.*)"),
+        "UUID",
+        "$1",
+        "vdie_id",
+        "(.*)"
+        )
+    - record: kantaloupe_gpu_core_used # the total core of npu is 30 
+      expr: |
+        label_replace(
+        label_replace(npu_chip_info_utilization/100*30, "modelName", "$1", "model_name", "(.*)"),
+        "UUID",
+        "$1",
+        "vdie_id",
+        "(.*)"
+        )
+    # - record: kantaloupe_gpu_errors
+    #   expr: nil
+    - record: kantaloupe_workload_gpumem_used
+      expr: |
+        label_replace(
+        label_replace(container_npu_used_memory, "modelName", "$1", "model_name", "(.*)"),
+        "UUID",
+        "$1",
+        "vdie_id",
+        "(.*)"
+        )
+    - record: kantaloupe_workload_gpucore_used
+      expr: |
+        label_replace(
+        label_replace(container_npu_utilization, "modelName", "$1", "model_name", "(.*)"),
+        "UUID",
+        "$1",
+        "vdie_id",
+        "(.*)"
+        )
+    # - record: kantaloupe_workload_gpumem_allocated
+    #   expr: label_replace(vGPUMemoryAllocated/1024/1024, "UUID", "$1", "deviceuuid", "(.*)")
+    - record: kantaloupe_workload_gpucore_allocated #TODO: Add a meaningless metric, values always to 100
+      expr: |
+        label_replace(
+        label_replace(container_npu_utilization*0+100, "modelName", "$1", "model_name", "(.*)"),
+        "UUID",
+        "$1",
+        "vdie_id",
+        "(.*)"
+        )
+  - name: neuron
+    labels:
+      vendor: aws-neuron
+      cluster: local-cluster # TODO: remove this when multiple clusters are supported
+    interval: 15s
+    rules:
+    # Neuron monitor dose not support GPU temp, so we use a fake value, -1 means empty data
+    - record: kantaloupe_gpu_temp
+      expr: label_replace(GPUDeviceCoreLimit * 0 - 1, "UUID", "$1", "deviceuuid", "(.*)")
+    - record: kantaloupe_workload_gpucore_used
+      expr: label_replace(neuroncore_utilization_ratio, "deployment", "$1", "runtime_tag", "(.*)")
+    - record: kantaloupe_workload_gpumem_used
+      expr: label_replace(neuron_memory_used_bytes/1024/1024, "deployment", "$1", "runtime_tag", "(.*)")
+  - name: metax
+    labels: 
+      vendor: metax
+    interval: 15s
+    rules:
+    - record: kantaloupe_gpu_temp
+      expr: | 
+        label_replace(
+        label_replace(mx_board_core_temp, "node", "$1", "Hostname", "(.*)"),
+        "UUID",
+        "$1",
+        "uuid",
+        "(.*)"
+        )
+    - record: kantaloupe_gpu_power
+      expr: |
+        label_replace(
+        label_replace(mx_board_power / 1000, "node", "$1", "Hostname", "(.*)"),
+        "UUID",
+        "$1",
+        "uuid",
+        "(.*)"
+        )
+    - record: kantaloupe_gpu_mem_used
+      expr: |
+        label_replace(
+        label_replace(mx_memory_used{type="vram"}/1024, "node", "$1", "Hostname", "(.*)"),
+        "UUID",
+        "$1",
+        "uuid",
+        "(.*)"
+        )
+    - record: kantaloupe_gpu_core_used
+      expr: |
+        label_replace(
+        label_replace(mx_gpu_usage, "node", "$1", "Hostname", "(.*)"),
+        "UUID",
+        "$1",
+        "uuid",
+        "(.*)"
+        )
+    - record: kantaloupe_workload_gpucore_used
+      expr: |
+        label_replace(
+        label_replace(mx_sgpu_usage, "node", "$1", "Hostname", "(.*)"),
+        "UUID",
+        "$1",
+        "uuid",
+        "(.*)"
+        )
+    - record: kantaloupe_workload_gpumem_used
+      expr: | 
+        label_replace(
+        label_replace(mx_sgpu_used_memory/1024, "node", "$1", "Hostname", "(.*)"),
+        "UUID",
+        "$1",
+        "uuid",
+        "(.*)"
+        )
+    - record: kantaloupe_workload_gpucore_allocated
+      expr: |
+        label_replace(
+        label_replace(mx_sgpu_compute_quota, "node", "$1", "Hostname", "(.*)"),
+        "UUID",
+        "$1",
+        "uuid",
+        "(.*)"
+        )
+    - record: kantaloupe_workload_gpumem_allocated
+      expr: |
+        label_replace( 
+        label_replace(mx_sgpu_total_memory/1024, "node", "$1", "Hostname", "(.*)"),
+        "UUID",
+        "$1",
+        "uuid",
+        "(.*)"
+        )
+  - name: node
+    interval: 15s
+    rules:
+    - record: kantaloupe_node_cpu_used
+      expr: sum by (node, cluster) (kantaloupe_workload_cpu_used)
+    - record: kantaloupe_node_cpu_allocated
+      expr: sum by (node, cluster) (kantaloupe_workload_cpu_allocated)
+    - record: kantaloupe_node_cpu_total
+      expr: sum by (node, cluster) (kube_node_status_allocatable{resource="cpu"})
+    - record: kantaloupe_node_mem_used
+      expr: sum by (node, cluster) (kantaloupe_workload_mem_used)
+    - record: kantaloupe_node_mem_allocated
+      expr: sum by (node, cluster) (kantaloupe_workload_mem_allocated)
+    - record: kantaloupe_node_mem_total
+      expr: sum by (node, cluster) (kube_node_status_allocatable{resource="memory"})
+    - record: kantaloupe_node_gpucore_used
+      expr: sum by (node, cluster) (kantaloupe_gpu_core_used) or sum by (node, cluster) (kantaloupe_workload_gpucore_used)
+    - record: kantaloupe_node_gpucore_allocated
+      expr: sum by (node, cluster) (kantaloupe_gpu_core_allocated)
+    - record: kantaloupe_node_gpucore_total
+      expr: sum by (node, cluster) (kantaloupe_gpu_core_total)
+    - record: kantaloupe_node_gpumem_used
+      expr: sum by (node, cluster) (kantaloupe_gpu_mem_used) or sum by (node, cluster) (kantaloupe_workload_gpumem_used)
+    - record: kantaloupe_node_gpumem_allocated
+      expr: sum by (node, cluster) (kantaloupe_gpu_mem_allocated)
+    - record: kantaloupe_node_gpumem_total
+      expr: sum by (node, cluster) (kantaloupe_gpu_mem_total)
+  - name: cluster
+    interval: 15s
+    rules:
+    - record: kantaloupe_cluster_cpu_used
+      expr: sum by (cluster) (kantaloupe_node_cpu_used)
+    - record: kantaloupe_cluster_cpu_allocated
+      expr: sum by (cluster) (kantaloupe_node_cpu_allocated)
+    - record: kantaloupe_cluster_cpu_total
+      expr: sum by (cluster) (kantaloupe_node_cpu_total)
+    - record: kantaloupe_cluster_mem_used
+      expr: sum by (cluster) (kantaloupe_node_mem_used)
+    - record: kantaloupe_cluster_mem_allocated
+      expr: sum by (cluster) (kantaloupe_node_mem_allocated)
+    - record: kantaloupe_cluster_mem_total
+      expr: sum by (cluster) (kantaloupe_node_mem_total)
+    - record: kantaloupe_cluster_gpucore_used
+      expr: sum by (cluster) (kantaloupe_node_gpucore_used)
+    - record: kantaloupe_cluster_gpucore_allocated
+      expr: sum by (cluster) (kantaloupe_node_gpucore_allocated)
+    - record: kantaloupe_cluster_gpucore_total
+      expr: sum by (cluster) (kantaloupe_node_gpucore_total)
+    - record: kantaloupe_cluster_gpumem_used
+      expr: sum by (cluster) (kantaloupe_node_gpumem_used)
+    - record: kantaloupe_cluster_gpumem_allocated
+      expr: sum by (cluster) (kantaloupe_node_gpumem_allocated)
+    - record: kantaloupe_cluster_gpumem_total
+      expr: sum by (cluster) (kantaloupe_node_gpumem_total)
+  - name: global
+    interval: 15s
+    rules:
+    - record: kantaloupe_global_cpu_used
+      expr: sum(kantaloupe_cluster_cpu_used)
+    - record: kantaloupe_global_cpu_allocated
+      expr: sum(kantaloupe_cluster_cpu_allocated)
+    - record: kantaloupe_global_cpu_total
+      expr: sum(kantaloupe_cluster_cpu_total)
+    - record: kantaloupe_global_mem_used
+      expr: sum(kantaloupe_cluster_mem_used)
+    - record: kantaloupe_global_mem_allocated
+      expr: sum(kantaloupe_cluster_mem_allocated)
+    - record: kantaloupe_global_mem_total
+      expr: sum(kantaloupe_cluster_mem_total)
+    - record: kantaloupe_global_gpucore_used
+      expr: sum(kantaloupe_cluster_gpucore_used)
+    - record: kantaloupe_global_gpucore_allocated
+      expr: sum(kantaloupe_cluster_gpucore_allocated)
+    - record: kantaloupe_global_gpucore_total
+      expr: sum(kantaloupe_cluster_gpucore_total)
+    - record: kantaloupe_global_gpumem_used
+      expr: sum(kantaloupe_cluster_gpumem_used)
+    - record: kantaloupe_global_gpumem_allocated
+      expr: sum(kantaloupe_cluster_gpumem_allocated)
+    - record: kantaloupe_global_gpumem_total
+      expr: sum(kantaloupe_cluster_gpumem_total)

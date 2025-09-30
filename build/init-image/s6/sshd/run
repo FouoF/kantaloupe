@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -e
+if [ ! "${ENABLE_SSHD+x}" ]; then
+  sleep infinity
+fi
+export PATH=$PATH:$HOME/.local/bin:/opt/conda/bin
+SSHD_MARKER="/etc/s6/sshd/.sshd_installed"
+if [ -f "$SSHD_MARKER" ]; then
+    echo "SSHD is already installed. Starting SSHD..."
+else
+    echo "SSHD is not installed. Installing SSHD..."
+    bash /usr/local/builtin-script/copy/ssh.sh
+    if [ $? -eq 0 ]; then
+        touch "$SSHD_MARKER"
+        echo "SSHD installation marker created."
+    else
+        echo "Error: Failed to install SSHD. Exiting."
+        exit 1
+    fi
+fi
+
+# Start sshd in the foreground (necessary for s6 to manage it)
+exec /usr/sbin/sshd -D

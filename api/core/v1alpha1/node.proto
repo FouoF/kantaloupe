@@ -1,0 +1,304 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.core.v1alpha1;
+
+import "api/types/objectmeta.proto";
+import "api/types/page.proto";
+import "api/types/types.proto";
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/core/v1alpha1;v1alpha1";
+
+message Node {
+    // Standard object's metadata.
+    kantaloupe.dynamia.ai.api.types.ObjectMeta metadata = 1;
+
+    // NodeSpec defines the behavior of a node.
+    NodeSpec spec = 2;
+
+    // Most recently observed status of the node.
+    // Populated by the system.
+    NodeStatus status = 3;
+}
+
+message NodeSpec {
+    // PodCIDR represents the pod IP range assigned to the node.
+    string podCIDR = 1;
+
+    // Unschedulable controls node schedulability of new pods. By default, node is
+    // schedulable.
+    bool unschedulable = 2;
+
+    // If specified, the node's taints.
+    repeated Taint taints = 3;
+}
+
+message Taint {
+    // Required. The taint key to be applied to a node.
+    string key = 1;
+
+    // The taint value corresponding to the taint key.
+    string value = 2;
+
+    // Valid effects are NoSchedule, PreferNoSchedule, and NoExecute.
+    TaintEffect effect = 3;
+}
+
+// Valid effects are NoSchedule, PreferNoSchedule, and NoExecute.
+enum TaintEffect {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    TAINT_EFFECT_UNSPECIFIED = 0;
+
+    // NoSchedule tries to avoid scheduling pods to nodes where they can't
+    // tolerate taints.
+    NoSchedule = 1;
+
+    // This is not mandatory tries to avoid scheduling pods to nodes.
+    PreferNoSchedule = 2;
+
+    // NoExecute is not assign pod  to or evicted pod from the node.
+    NoExecute = 3;
+}
+
+// NodeStatus is information about the current status of a node.
+message NodeStatus {
+    // Status is the current observed node condition.
+    message Status {
+        NodePhase phase = 1;
+
+        // NodeCondition contains condition information for a node.
+        repeated NodeCondition conditions = 2;
+    }
+
+    // Status represents the current information/status of node.
+    Status status = 1;
+
+    // IP Address reachable to the node.
+    repeated NodeAddress addresses = 2;
+
+    // CpuCapacity is the total cpu of the node. Unit: m.
+    int64 cpu_capacity = 3;
+
+    // CpuAllocated is the total pod cpu request on the node. Unit: %.
+    double cpu_allocated = 4;
+
+    // CpuUsage is the cpu usage on the node. Unit: %.
+    double cpu_usage = 5;
+
+    // MemoryCapacity is the total memory of the node. Unit: byte.
+    int64 memory_capacity = 6;
+
+    // MemoryAllocated is the total pod memory request on the node. Unit: %.
+    double memory_allocated = 7;
+
+    // MemoryUsage is the memory usage on the node. Unit: %.
+    double memory_usage = 8;
+
+    // gpu_count is gpu number.
+    int32 gpu_count = 9;
+
+    // gpu_total is gpu total core that can be allocated.
+    double gpu_core_total = 10;
+
+    // gpu_allocated is gpu allocated number.
+    double gpu_core_allocated = 11;
+
+    // gpu_core_usage is the usage rate of gpu
+    double gpu_core_usage = 12;
+
+    // gpu_memory_total is all gpu memory number with node. Unit: byte.
+    int64 gpu_memory_total = 13;
+
+    // gpu_memory_allocatable is allocatable gpu memory number with node. Unit: byte
+    int64 gpu_memory_allocatable = 14;
+
+    // gpu_memory_allocated is allocated gpu memory number with node. Unit: byte
+    int64 gpu_memory_allocated = 15;
+
+    // gpu_memory_usage is the usage rate of gpu video memory
+    int64 gpu_memory_usage = 16;
+
+    // Set of ids/uuids to uniquely identify the node.
+    NodeSystemInfo system_info = 17;
+
+    // The roles of current node.
+    repeated Role roles = 18;
+}
+
+// NodeCondition contains condition information for a node.
+message NodeCondition {
+    // Type of node condition. The built-in set of conditions are: Ready,
+    // MemoryPressure, DiskPressure, PIDPressure,
+    // NetworkUnavailable, and SchedulingDisabled.
+    string type = 1;
+
+    // Status of the condition, one of True, False, Unknown.
+    kantaloupe.dynamia.ai.api.types.ConditionStatus status = 2;
+
+    // (brief) reason for the condition's last transition.
+    string reason = 3;
+
+    // Human readable message indicating details about last transition.
+    string message = 4;
+
+    // The last time this condition was updated.
+    string updateTimestamp = 5;
+}
+
+message NodeSystemInfo {
+    // Kernel Version reported by the node from 'uname -r'
+    // (e.g. 3.16.0-0.bpo.4-amd64).
+    string kernel_version = 1;
+
+    // OS Image reported by the node from /etc/os-release (e.g. Debian GNU/Linux 7
+    // (wheezy)).
+    string os_image = 2;
+
+    // ContainerRuntime Version reported by the node through runtime remote API
+    // (e.g. docker://1.5.0).
+    string container_runtime_version = 3;
+
+    // Kubelet Version reported by the node.
+    string kubelet_version = 4;
+
+    // The Architecture reported by the node.
+    string architecture = 5;
+
+    string cuda_version = 6;
+
+    string nvidia_version = 7;
+}
+
+// NodeAddress contains information for the instance's address.
+// The node addresses returned here will be set on the node's status.addresses
+// field.
+message NodeAddress {
+    // Type is a array used for frontend filter.
+    string type = 1;
+
+    // IP Address reachable to the node.
+    string address = 2;
+}
+
+// Phase includes Ready, NotReady, and Unknown.
+enum NodePhase {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    NODE_PHASE_UNSPECIFIED = 0;
+
+    // The node is ready to work.
+    Ready = 1;
+
+    // The node is not ready.
+    Not_Ready = 2;
+
+    // The node state is unknown.
+    Unknown = 3;
+}
+
+// Role includes control-plane and worker.
+enum Role {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    NODE_ROLE_UNSPECIFIED = 0;
+
+    // The control plane manages the worker nodes and the Pods in the cluster.
+    CONTROL_PLANE = 1;
+
+    // The worker node(s) host the Pods that are the components of the
+    // application workload.
+    WORKER = 2;
+}
+
+// Get Nodes information List.
+message ListNodesRequest {
+    // Name is the user-specified identifier.
+    // This field may not be updated.
+    string cluster = 1;
+
+    string name = 2;
+
+    Role role = 3;
+
+    NodePhase phase = 4;
+
+    // Page requested.
+    int32 page = 5;
+
+    // Size per page requested.
+    int32 page_size = 6;
+
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 7;
+}
+
+// Nodes information List.
+message ListNodesResponse {
+    // data The data field is the YAML details
+    repeated Node items = 1;
+
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}
+
+// GetNodeRequest returns node information.
+message GetNodeRequest {
+    string cluster = 1;
+    // Name is the user-specified identifier.
+    string name = 2;
+}
+
+// PutNodeLabels put node's labels.
+message PutNodeLabelsRequest {
+    // Cluster represents which cluster the node belongs to.
+    string cluster = 1;
+
+    // Node name.
+    string node = 2;
+
+    // the labels of node.
+    map<string, string> labels = 3;
+}
+
+message PutNodeLabelsResponse {
+    map<string, string> labels = 1;
+}
+
+// PutNodeTaints put node's taints.
+message PutNodeTaintsRequest {
+    // // Cluster the specified node belongs to.
+    string cluster = 1;
+
+    // Node name.
+    string node = 2;
+
+    // If specified, the node's taints.
+    repeated Taint taints = 3;
+}
+
+// PutNodeTaintsResponse returns node's taints.
+message PutNodeTaintsResponse {
+    repeated Taint taints = 1;
+}
+
+message UpdateNodeAnnotationsRequest {
+    // Cluster the specified node belongs to.
+    string cluster = 1;
+
+    // Node name.
+    string node = 2;
+
+    // Annotations requested.
+    map<string, string> annotations = 3;
+}
+
+message UpdateNodeAnnotationsResponse {
+    // Annotations returned.
+    map<string, string> annotations = 1;
+}
+
+// Get the node information which is unschedulable.
+message ScheduleNodeRequest {
+    // Cluster the specified node belongs to.
+    string cluster = 1;
+
+    // Node name.
+    string node = 2;
+}

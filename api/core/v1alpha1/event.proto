@@ -1,0 +1,249 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.core.v1alpha1;
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/core/v1alpha1;v1alpha1";
+
+import "api/types/page.proto";
+
+// Event is a report of an event somewhere in the cluster.  Events
+// have a limited retention time and triggers and messages may evolve
+// with time.  Event consumers should not rely on the timing of an event
+// with a given Reason reflecting a consistent underlying trigger, or the
+// continued existence of events with that Reason.  Events should be
+// treated as informative, best-effort, supplemental data.
+message Event {
+    // The object that this event is about.
+    ObjectReference involved_object = 1;
+
+    // reason is why the action was taken. It is human-readable.
+    // This field cannot be empty for new Events and it can have at most 128
+    // characters.
+    string reason = 2;
+
+    // A human-readable description of the status of this operation.
+    string message = 3;
+
+    // The component reporting this event. Should be a short machine
+    // understandable string.
+    EventSource source = 4;
+
+    // The time at which the most recent occurrence of this event was recorded.
+    int64 lastTimestamp = 5;
+
+    // Type of this event (Normal, Warning), new types could be added in the
+    // future.
+    EventType type = 6;
+
+    int64 firstTimestamp = 7;
+}
+
+// Type of event (Normal, Warning), new types could be added in the
+// future.
+enum EventType {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    EVENT_TYPE_UNSPECIFIED = 0;
+
+    // Normal is a normal event type.
+    Normal = 1;
+
+    // Warning is a warning event type.
+    Warning = 2;
+}
+
+// ObjectReference contains enough information to let you inspect or modify the
+// referred object.
+message ObjectReference {
+    // Kind of the referent.
+    // More info:
+    // https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+    // +optional
+    string kind = 1;
+
+    // Name of the referent.
+    // More info:
+    // https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+    string name = 2;
+
+    // Namespace of the referent.
+    // More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
+    // +optional
+    string namespace = 3;
+
+    // UID of the referent.
+    // More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#uids
+    // +optional
+    string uid = 4;
+
+    // API version of the referent.
+    // +optional
+    string api_version = 5;
+
+    // Specific resourceVersion to which this reference is made, if any.
+    // More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#concurrency-control-and-consistency
+    // +optional
+    string resource_version = 6;
+}
+
+// EventSource contains information for an event.
+message EventSource {
+    // Component from which the event is generated.
+    // +optional
+    string component = 1;
+
+    // Node name on which the event is generated.
+    // +optional
+    string host = 2;
+}
+
+// ListClusterEvents represents the request of events list of specified cluster
+message ListClusterEventsRequest {
+    // Cluster the events belongs to.
+    string cluster = 1;
+
+    // Page is current page.
+    int32 page = 2;
+
+    // Size is the data number shown per page.
+    int32 page_size = 3;
+
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 4;
+
+    // Type is used for query, showing events of specified type.
+    // Use example: type=WARNING&type=NORMAL.
+    repeated EventType type = 5;
+
+    // Kind is used for query, showing events of specified involvedObject kind,
+    // e.g. Node.
+    // +optional
+    string kind = 6;
+
+    // Name is used for query, showing events of specified involvedObject name,
+    // e.g. node‘s name when kind is Node.
+    // +optional
+    string name = 7;
+
+    string namespace = 8;
+}
+
+// ListClusterEventsResponse returns the list and pagination of events.
+message ListClusterEventsResponse {
+    // Data represents the returned event list.
+    repeated Event items = 1;
+
+    // Pagination is for data paging.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}
+
+// ListClusterEventKindsRequest represents the request of involvedObject's
+// kinds list of events by cluster name
+message ListClusterEventKindsRequest {
+    // Cluster the events belongs to.
+    string cluster = 1;
+}
+
+// ListClusterEventKindsResponse returns the list of involvedObject's kinds of
+// events.
+message ListClusterEventKindsResponse {
+    // Data is the list of involvedObject'kinds of events.
+    repeated string data = 1;
+}
+
+// ListEventsRequest represents the request of events list of specified
+// kind of resource
+message ListEventsRequest {
+    // cluster represents the name of deployment belongs to.
+    string cluster = 1;
+
+    // Namespace represents which namespace the deployment belongs to.
+    string namespace = 2;
+
+    enum Kind {
+        // KIND_UNSPECIFIED is only a meaningless placeholder, to avoid zero not
+        // return.
+        KIND_UNSPECIFIED = 0;
+
+        // ListEvents by deployment.
+        Deployment = 1;
+
+        // ListEvents by statefulSet.
+        StatefulSet = 2;
+
+        // ListEvents by daemonSet.
+        DaemonSet = 3;
+
+        // ListEvents by pod.
+        Pod = 4;
+
+        // ListEvents by service.
+        Service = 5;
+
+        // ListEvents by ingress.
+        Ingress = 6;
+
+        // ListEvents by job.
+        Job = 7;
+
+        // ListEvents by cronJob.
+        CronJob = 8;
+
+        // ListEvents by HorizontalPodAutoscaler.
+        HorizontalPodAutoscaler = 9;
+
+        // ListEvents by replicaset.
+        ReplicaSet = 10;
+
+        // ListEvents by CronHPA.
+        CronHPA = 11;
+
+        // ListEvents by PersistentVolumeClaim.
+        PersistentVolumeClaim = 12;
+
+        // ListEvents by GroupVersionResource. If kind is set to GroupVersionResource,
+        // you must specify the value of group version resource.
+        GroupVersionResource = 13;
+    }
+
+    // Kind represents what type of event is needed.
+    Kind kind = 3;
+
+    // The name of involvedObject.
+    // If the kind is DEPLOYMENT,
+    // this presents the name of deployments.
+    string kind_name = 4;
+
+    // Name stands for event name, used for fuzzy search.
+    string name = 5;
+
+    // Page requested.
+    int32 page = 6;
+
+    // Size per page requested.
+    int32 page_size = 7;
+
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 8;
+
+    // Type is used for query, showing events of specified type.
+    // Use example: type=WARNING&type=NORMAL.
+    repeated EventType type = 9;
+
+    // resource group,used when the kind type is GroupVersionResource.
+    string group = 10;
+
+    // resource version,used when the kind type is GroupVersionResource.
+    string version = 11;
+
+    // resource name,used when the kind type is GroupVersionResource.
+    string resource = 12;
+}
+
+// ListEventsByWorkloadNameResponse the response of listEvents by workload name
+message ListEventsResponse {
+    // Data response of the workload's event
+    repeated kantaloupe.dynamia.ai.api.core.v1alpha1.Event items = 1;
+
+    // Pagination is for data paging
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}

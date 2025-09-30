@@ -1,0 +1,264 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.monitoring.v1alpha1;
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/monitoring/v1alpha1";
+
+import "api/types/page.proto";
+import "google/protobuf/wrappers.proto";
+
+// Monitoring represents a monitoring.
+message Monitoring {
+    // The name of the monitoring.
+    string pod_name = 1;
+
+    // The namespace of the monitoring.
+    string pod_namespace = 2;
+    // gpu uuid
+    string gpu_uuid = 3;
+    // The node name of the monitoring.
+    string node_name = 4;
+
+    float gpu_utilization = 5;
+    // gpu card name , eg: Tesla V100-SXM2-16GB
+    string model_name = 6;
+}
+
+// ListMonitoringsRequest is the request for ListMonitorings.
+message ListMonitoringsRequest {
+    string cluster  = 1;
+    string pod_name = 2;
+    // The namespace of the monitoring.
+    string pod_namespace = 3;
+    // gpu uuid
+    string gpu_uuid = 4;
+    // The node name of the monitoring.
+    string node_name = 5;
+    // gpu card name , eg: Tesla V100-SXM2-16GB
+    string model_name = 6;
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 7;
+}
+
+message ListMonitoringsResponse {
+    // data The data field is the YAML details
+    repeated Monitoring items = 1;
+
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}
+
+// ResourceType represents the type of resource being queried
+enum ResourceType {
+    RESOURCE_TYPE_UNSPECIFIED = 0;
+    RESOURCE_TYPE_CPU         = 1;
+    RESOURCE_TYPE_MEMORY      = 2;
+    RESOURCE_TYPE_GPU_CORE    = 3;
+    RESOURCE_TYPE_GPU_MEMORY  = 4;
+    RESOURCE_TYPE_STORAGE     = 5;
+    RESOURCE_TYPE_NETWORK     = 6;
+    RESOURCE_TYPE_TEMP        = 7;
+    RESOURCE_TYPE_POWER       = 8;
+}
+
+// TimeSeriesPoint represents a single point in a time series
+message TimeSeriesPoint {
+    // Timestamp in seconds since epoch
+    int64 timestamp = 1;
+    // The value at this timestamp
+    google.protobuf.DoubleValue value = 2;
+}
+
+// TimeSeries represents a series of data points
+message TimeSeries {
+    // The metric name (e.g. "allocated", "used")
+    string metric = 1;
+    // The data points in this series
+    repeated TimeSeriesPoint points = 2;
+}
+
+// ResourceTrendRequest represents a request for resource trend data
+message ResourceTrendRequest {
+    // The cluster to query
+    string cluster = 1;
+    // The type of resource to query
+    ResourceType resource_type = 2;
+    // Optional: relative time range (e.g. "1h")
+    string range = 3;
+    // Optional: start time in seconds since epoch
+    int64 start = 4;
+    // Optional: end time in seconds since epoch
+    int64 end = 5;
+    // Optional: step between samples in seconds
+    int64 step = 6;
+}
+
+// ResourceTrendResponse represents the response containing resource trend data
+message ResourceTrendResponse {
+    // The time series data
+    repeated TimeSeries data = 1;
+}
+
+// NodeResourceTrendRequest represents a request for node resource trend data
+message NodeResourceTrendRequest {
+    // The cluster to query
+    string cluster = 1;
+    // The node to query
+    string node = 2;
+    // The type of resource to query
+    ResourceType resource_type = 3;
+    // Optional: relative time range (e.g. "1h")
+    string range = 4;
+    // Optional: start time in seconds since epoch
+    int64 start = 5;
+    // Optional: end time in seconds since epoch
+    int64 end = 6;
+    // Optional: step between samples in seconds
+    int64 step = 7;
+}
+
+// KantaloupeflowResourceTrendRequest represents a request for kantaloupeflow resource trend data
+message KantaloupeflowResourceTrendRequest {
+    // The cluster to query
+    string cluster = 1;
+    // The namespace to query
+    string namespace = 2;
+    // The name to query
+    string name = 3;
+    // The type of resource to query
+    ResourceType resource_type = 4;
+    // Optional: relative time range (e.g. "1h")
+    string range = 5;
+    // Optional: start time in seconds since epoch
+    int64 start = 6;
+    // Optional: end time in seconds since epoch
+    int64 end = 7;
+    // Optional: step between samples in seconds
+    int64 step = 8;
+}
+
+// DistributionPoint represents a single point in a distribution
+message DistributionPoint {
+    // The name of the category (e.g. "GPU-1" or "0-10")
+    string name = 1;
+    // The value for this category
+    int32 value = 2;
+}
+
+// WorkloadDistributionResponse represents the response for workload distribution
+message WorkloadDistributionResponse {
+    // The distribution data points
+    repeated DistributionPoint data = 1;
+}
+
+// NodeWorkloadDistributionRequest represents a request for node workload distribution
+message NodeWorkloadDistributionRequest {
+    // The cluster to query
+    string cluster = 1;
+    // The node to query
+    string node = 2;
+}
+
+// ClusterWorkloadDistributionRequest represents a request for cluster workload distribution
+message ClusterWorkloadDistributionRequest {
+    // The cluster to query
+    string cluster = 1;
+}
+
+// RankingType represents the type of ranking metric (allocated or used)
+enum RankingType {
+    RANKING_TYPE_UNSPECIFIED = 0;
+    RANKING_TYPE_ALLOCATED   = 1;
+    RANKING_TYPE_USED        = 2;
+}
+
+// TopNodeRequest represents a request for top K nodes by resource usage
+message TopNodeRequest {
+    string cluster             = 1;
+    ResourceType resource_type = 2;
+    RankingType ranking_type   = 3;
+    int32 limit                = 4;
+}
+
+// TopNodeWorkloadRequest represents a request for top K nodes by workload count
+message TopNodeWorkloadRequest {
+    string cluster = 1;
+    int32 limit    = 2;
+}
+
+// TopNodeResponse represents the response containing top K nodes
+message TopNodeResponse {
+    repeated DistributionPoint data = 1;
+}
+
+message MemoryDistributionRequest {
+    string cluster   = 1;
+    string namespace = 2;
+    string name      = 3;
+}
+
+// MemoryDistributionResponse represents the gpu memory distribution of a workload
+message MemoryDistributionResponse {
+    repeated DistributionPoint64 data = 1;
+}
+
+message DistributionPoint64 {
+    string name = 1;
+    int64 value = 2;
+}
+
+enum RequstType {
+    UNSPECIFIED = 0;
+    CORE        = 1;
+    MEMORY      = 2;
+}
+
+message WorkloadInfo {
+    string name             = 1;
+    double core_allocated   = 2;
+    double memory_allocated = 3;
+    double core_usage       = 4;
+    double memory_usage     = 5;
+}
+
+message CardTopWorkloadsRequest {
+    string cluster  = 1;
+    string node     = 2;
+    string uuid     = 3;
+    int32 limit     = 4;
+    RequstType type = 5;
+}
+
+message CardTopWorkloadsResponse {
+    repeated WorkloadInfo workloads = 1;
+
+    int32 total = 2;
+}
+
+message GpuResourceTrendRequest {
+    string cluster             = 1;
+    string node                = 2;
+    string uuid                = 3;
+    ResourceType resource_type = 4;
+    // Optional: relative time range (e.g. "1h")
+    string range = 5;
+    // Optional: start time in seconds since epoch
+    int64 start = 6;
+    // Optional: end time in seconds since epoch
+    int64 end = 7;
+    // Optional: step between samples in seconds
+    int64 step = 8;
+}
+
+message GetClusterWorkloadsTopRequest {
+    string cluster  = 1;
+    int32 limit     = 2;
+    RequstType type = 3;
+    string range    = 4;
+    // Optional: step between samples in seconds
+    int64 step = 5;
+}
+
+message GetClusterWorkloadsTopResponse {
+    repeated TimeSeries data = 1;
+}

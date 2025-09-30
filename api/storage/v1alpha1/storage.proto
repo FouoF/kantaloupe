@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.storage.v1alpha1;
+
+import "api/core/v1alpha1/persistentvolume.proto";
+import "api/core/v1alpha1/persistentvolumeclaim.proto";
+import "api/types/page.proto";
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/storage/v1alpha1;v1alpha1";
+
+enum StorageType {
+    StorageTypeUnspecified = 0;
+
+    LocalPV = 1;
+
+    NFS = 2;
+
+    PVC = 3;
+}
+
+message CreateStorageRequest {
+    string cluster           = 1;
+    StorageType storage_type = 2;
+    bool is_manage           = 3;
+
+    // common attributes
+    string storage_name = 4;
+    string namespace    = 5;
+    string access_mode  = 6;
+    string storage_size = 7;
+
+    // NFS
+    string nfs_server = 8;
+    string data_path  = 9;
+
+    // LocalPV
+    string local_path = 10;
+    string node_name  = 11;
+
+    // PVC
+    string storage_class_name = 12;
+}
+
+message Storage {
+    // Spec defines a specification of a persistent volume owned by the cluster.
+    kantaloupe.dynamia.ai.api.core.v1alpha1.PersistentVolumeClaim persistent_volume_claim = 1;
+
+    StorageType storage_type = 2;
+
+    kantaloupe.dynamia.ai.api.core.v1alpha1.PersistentVolume persistent_volume = 3;
+}
+
+message DeleteStorageRequest {
+    string cluster = 1;
+
+    string name = 2;
+
+    string namespace = 3;
+}
+
+message ListStoragesRequest {
+    // cluster represents the name of PVC to belongs to.
+    string cluster = 1;
+
+    // Namespace represents which namespace the PVC belongs to.
+    string namespace = 2;
+
+    // Page requested.
+    int32 page = 3;
+
+    // Size per page requested.
+    int32 page_size = 4;
+
+    // Name is used for fuzzy search by name.
+    string name = 5;
+
+    // Phases is used for fuzzy search by phase.
+    kantaloupe.dynamia.ai.api.core.v1alpha1.PVCPhase phase = 6;
+
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 7;
+
+    // LabelSelector is the format after labels.FormatLabels used to filter
+    string label_selector = 8;
+
+    // FieldSelector is the format after labels.FormatLabels used to filter
+    string field_selector = 9;
+
+    // FuzzyName is used to fuzzy search by multiple parameters including name.
+    string fuzzy_name = 10;
+
+    bool is_manage = 11;
+
+    StorageType storage_type = 12;
+}
+
+// ListPersistentVolumeClaimRequest represents the response of list PVC
+message ListStoragesResponse {
+    // Data describes the common attributes of storage devices
+    // and allows a Source for provider-specific attributes
+    repeated kantaloupe.dynamia.ai.api.core.v1alpha1.PersistentVolumeClaim items = 1;
+
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}

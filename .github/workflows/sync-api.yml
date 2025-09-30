@@ -1,0 +1,42 @@
+name: Sync API Directory to api Repo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'api/sdk/v1/ts**'        # Only run when files in API directory change
+  workflow_dispatch:    # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+
+      - name: Copy API directory
+        run: |
+          rm -rf ../api-sync
+          mkdir ../api-sync
+          cp -r api/sdk/v1/ts/* ../api-sync/
+
+      - name: Checkout target api repo
+        uses: actions/checkout@v4
+        with:
+          repository: dynamia-ai/kantaloupe-api
+          token: ${{ secrets.API_REPO_PAT }}
+          path: kantaloupe-api
+
+      - name: Copy new files to api repo
+        run: |
+          cp -r ../api-sync/* kantaloupe-api/
+
+      - name: Commit and push changes
+        run: |
+          cd kantaloupe-api
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Sync API directory from source"
+          git push

@@ -1,0 +1,621 @@
+syntax = "proto3";
+
+package kantaloupev1;
+
+// for grpc-gateway
+import "google/api/empty.proto";
+
+import "api/clusters/v1alpha1/cluster.proto";
+import "api/kantaloupeflow/v1alpha1/kantaloupeflow.proto";
+import "api/core/v1alpha1/persistentvolume.proto";
+import "api/monitoring/v1alpha1/monitoring.proto";
+import "api/core/v1alpha1/secret.proto";
+import "api/core/v1alpha1/configmap.proto";
+import "api/core/v1alpha1/node.proto";
+import "api/core/v1alpha1/gpu.proto";
+import "api/core/v1alpha1/event.proto";
+import "api/storage/v1alpha1/storageclass.proto";
+import "api/credentials/v1alpha1/credential.proto";
+import "api/quotas/v1alpha1/quota.proto";
+import "api/core/v1alpha1/namespace.proto";
+import "api/storage/v1alpha1/storage.proto";
+import "google/api/annotations.proto";
+import "api/acceleratorcard/v1alpha1/acceleratorcard.proto";
+option go_package = "github.com/dynamia-ai/kantaloupe/api/v1";
+
+service Cluster {
+    // ListClusters lists cluster proto resources.
+    rpc ListClusters(kantaloupe.dynamia.ai.api.clusters.v1alpha1.ListClustersRequest)
+        returns (kantaloupe.dynamia.ai.api.clusters.v1alpha1.ListClustersResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters"
+        };
+    }
+
+    // IntegrateCluster integrates a cluster.
+    rpc IntegrateCluster(kantaloupe.dynamia.ai.api.clusters.v1alpha1.IntegrateClusterRequest)
+        returns (kantaloupe.dynamia.ai.api.clusters.v1alpha1.Cluster) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters"
+            body: "*"
+        };
+    }
+
+    // GetCluster gets the details of the specified cluster.
+    rpc GetCluster(kantaloupe.dynamia.ai.api.clusters.v1alpha1.GetClusterRequest)
+        returns (kantaloupe.dynamia.ai.api.clusters.v1alpha1.Cluster) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{name}"
+        };
+    }
+
+    // UpdateCluster updates the specified cluster.
+    rpc UpdateCluster(kantaloupe.dynamia.ai.api.clusters.v1alpha1.UpdateClusterRequest)
+        returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            put: "/apis/kantaloupe.dynamia.ai/v1/clusters/{name}"
+            body: "*"
+        };
+    }
+
+    // DeleteCluster deletes the specified cluster.
+    rpc DeleteCluster(kantaloupe.dynamia.ai.api.clusters.v1alpha1.DeleteClusterRequest)
+        returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/apis/kantaloupe.dynamia.ai/v1/clusters/{name}"
+            body: "*"
+        };
+    }
+
+    // ValidateKubeconfig validats whether the config is valid.
+    rpc ValidateKubeconfig(kantaloupe.dynamia.ai.api.clusters.v1alpha1.ValidateKubeconfigRequest)
+        returns (kantaloupe.dynamia.ai.api.clusters.v1alpha1.ValidateKubeconfigResponse) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/kubeconfig:validate"
+            body: "*"
+        };
+    }
+
+    // GetPlatformSummury gets platform summury.
+    rpc GetPlatformSummury(kantaloupe.dynamia.ai.api.clusters.v1alpha1.GetPlatformSummuryRequest)
+        returns (kantaloupe.dynamia.ai.api.clusters.v1alpha1.PlatformSummury) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/platform/summury"
+        };
+    }
+
+    // ListClusterVersions lists cluster versions.
+    rpc ListClusterVersions(google.protobuf.Empty)
+        returns (kantaloupe.dynamia.ai.api.clusters.v1alpha1.ListClusterVersionsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/versions"
+        };
+    }
+
+    rpc GetPlatformResourceTrend(google.protobuf.Empty)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.ResourceTrendResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/platform/resource/trend"
+        };
+    }
+
+    rpc GetPlatformGPUTop(kantaloupe.dynamia.ai.api.clusters.v1alpha1.GetPlatformGPUTopRequest)
+        returns (kantaloupe.dynamia.ai.api.clusters.v1alpha1.GetPlatformGPUTopResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/platform/gpu/top"
+        };
+    }
+
+    rpc GetClusterPlugins(kantaloupe.dynamia.ai.api.clusters.v1alpha1.GetClusterPluginsRequest)
+        returns (kantaloupe.dynamia.ai.api.clusters.v1alpha1.GetClusterPluginsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{name}/plugins"
+        };
+    }
+
+    rpc GetClusterCardRequestType(kantaloupe.dynamia.ai.api.clusters.v1alpha1.GetClusterCardRequestTypeRequest)
+        returns (kantaloupe.dynamia.ai.api.clusters.v1alpha1.GetClusterCardRequestTypeResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{name}/requesttype"
+        };
+    }
+}
+
+service Core {
+    // ListPersistentVolumes lists persistentvolumes in the specified cluster
+    rpc ListPersistentVolumes(kantaloupe.dynamia.ai.api.core.v1alpha1.ListPersistentVolumesRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.ListPersistentVolumesResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/persistentvolumes"
+        };
+    }
+
+    // GetPersistentVolume gets a persistentvolume from the system by given persistentvolume name
+    rpc GetPersistentVolume(kantaloupe.dynamia.ai.api.core.v1alpha1.GetPersistentVolumeRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.GetPersistentVolumeResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/persistentvolumes/{name}"
+        };
+    }
+
+    // GetPersistentVolumeJSON gets a persistentvolume json from the system by given persistentvolume name
+    rpc GetPersistentVolumeJSON(kantaloupe.dynamia.ai.api.core.v1alpha1.GetPersistentVolumeJSONRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.GetPersistentVolumeResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/persistentvolumes/{name}/json"
+        };
+    }
+
+    // CreatePersistentVolume creates a persistentvolume to the system by given persistentvolume data
+    rpc CreatePersistentVolume(kantaloupe.dynamia.ai.api.core.v1alpha1.CreatePersistentVolumeRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.CreatePersistentVolumeResponse) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/persistentvolumes",
+            body: "*",
+        };
+    }
+
+    // UpdatePersistentVolume updates a persistentvolume from the system by given persistentvolume name
+    rpc UpdatePersistentVolume(kantaloupe.dynamia.ai.api.core.v1alpha1.UpdatePersistentVolumeRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.UpdatePersistentVolumeResponse) {
+        option (google.api.http) = {
+            put: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/persistentvolumes/{name}"
+            body: "*",
+        };
+    }
+
+    // DeletePersistentVolume deletes a persistentvolume from the system by given persistentvolume name
+    rpc DeletePersistentVolume(kantaloupe.dynamia.ai.api.core.v1alpha1.DeletePersistentVolumeRequest)
+        returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/persistentvolumes/{name}",
+        };
+    }
+
+    // DeleteSecret deletes a secret under the namespaces of a specific cluster
+    rpc DeleteSecret(kantaloupe.dynamia.ai.api.core.v1alpha1.DeleteSecretRequest)
+        returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/secrets/{name}"
+        };
+    }
+
+    // GetClusterSecret gets a secret under the namespaces of a specific cluster
+    rpc GetSecret(kantaloupe.dynamia.ai.api.core.v1alpha1.GetSecretRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.Secret) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/secrets/{name}"
+        };
+    }
+
+    // ListSecrets lists a secret under the namespaces of a specific cluster
+    rpc ListSecrets(kantaloupe.dynamia.ai.api.core.v1alpha1.ListSecretsRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.ListSecretsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/secrets"
+        };
+    }
+
+    // CreateSecret creates a secret under the namespaces of a specific cluster
+    rpc CreateSecret(kantaloupe.dynamia.ai.api.core.v1alpha1.CreateSecretRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.CreateSecretResponse) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/secrets"
+            body: "*"
+        };
+    }
+
+    // ListClusterNamespaces gets all the namespaces of given cluster
+    rpc ListClusterNamespaces(
+        kantaloupe.dynamia.ai.api.core.v1alpha1.ListClusterNamespacesRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.ListClusterNamespacesResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces"
+        };
+    }
+
+    // ListClusterGPUSummary lists gpu summary of all nodes of the specified cluster.
+    rpc ListClusterGPUSummary(kantaloupe.dynamia.ai.api.core.v1alpha1.ListClusterGPUSummaryRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.ListClusterGPUSummaryResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/gpusummary"
+        };
+    }
+
+    // ListClusterEvents lists all events in the specified cluster,
+    // regardless of namespace.
+    rpc ListClusterEvents(kantaloupe.dynamia.ai.api.core.v1alpha1.ListClusterEventsRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.ListClusterEventsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/events"
+        };
+    }
+
+    // ListEvents lists events under the namespaces of a specific cluster
+    rpc ListEvents(kantaloupe.dynamia.ai.api.core.v1alpha1.ListEventsRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.ListEventsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/"
+                 "{namespace}/events"
+        };
+    }
+
+    // ListNodes lists nodes under the specific node
+    rpc ListNodes(kantaloupe.dynamia.ai.api.core.v1alpha1.ListNodesRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.ListNodesResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes"
+        };
+    }
+
+    // GetNode gets the details of the specified node
+    rpc GetNode(kantaloupe.dynamia.ai.api.core.v1alpha1.GetNodeRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.Node) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{name}"
+        };
+    }
+
+    // PutNodeLabels puts the specified node's labels
+    rpc PutNodeLabels(kantaloupe.dynamia.ai.api.core.v1alpha1.PutNodeLabelsRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.PutNodeLabelsResponse) {
+        option (google.api.http) = {
+            put: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{node}/labels"
+            body: "*"
+        };
+    }
+
+    // PutNodeTaints puts a node's taints in a specific cluster
+    rpc PutNodeTaints(kantaloupe.dynamia.ai.api.core.v1alpha1.PutNodeTaintsRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.PutNodeTaintsResponse) {
+        option (google.api.http) = {
+            put: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{node}/taints"
+            body: "*"
+        };
+    }
+
+    // UpdateNodeAnnotations edits annotations of specified node.
+    rpc UpdateNodeAnnotations(
+        kantaloupe.dynamia.ai.api.core.v1alpha1.UpdateNodeAnnotationsRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.UpdateNodeAnnotationsResponse) {
+        option (google.api.http) = {
+            put: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{node}/"
+                 "annotations"
+            body: "*"
+        };
+    }
+
+    // UnScheduleNode makes the specified node to unschedulable.
+    rpc UnScheduleNode(kantaloupe.dynamia.ai.api.core.v1alpha1.ScheduleNodeRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.Node) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{node}/unschedule"
+        };
+    }
+
+    // ScheduleNode makes the specified node to schedulable.
+    rpc ScheduleNode(kantaloupe.dynamia.ai.api.core.v1alpha1.ScheduleNodeRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.Node) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{node}/schedule"
+        };
+    }
+
+    // GetConfigMap gets a configMap under the namespaces of a specific cluster
+    rpc GetConfigMap(kantaloupe.dynamia.ai.api.core.v1alpha1.GetConfigMapRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.ConfigMap) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/"
+                 "{namespace}/configmaps/{name}"
+        };
+    }
+
+    // GetConfigMapJSON gets a configMap json under the namespaces of a specific cluster
+    rpc GetConfigMapJSON(kantaloupe.dynamia.ai.api.core.v1alpha1.GetConfigMapJSONRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.GetConfigMapJSONResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/"
+                 "{namespace}/configmaps/{name}/json"
+        };
+    }
+
+    // UpdateConfigMap updates a configMap under the namespaces of a specific cluster
+    rpc UpdateConfigMap(kantaloupe.dynamia.ai.api.core.v1alpha1.UpdateConfigMapRequest)
+        returns (kantaloupe.dynamia.ai.api.core.v1alpha1.UpdateConfigMapResponse) {
+        option (google.api.http) = {
+            put: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/"
+                 "{namespace}/configmaps/{name}",
+            body: "*",
+        };
+    }
+}
+
+service Monitoring {
+    rpc ListAllPodsGPUUtilization(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.ListMonitoringsRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1
+                     .ListMonitoringsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/monitoring/gpuUtilization"
+        };
+    }
+
+    // GetResourceTrend returns the resource utilization trend for a specific resource type
+    rpc GetResourceTrend(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.ResourceTrendRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.ResourceTrendResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/resource/trend"
+        };
+    }
+
+    // GetNodeResourceTrend returns the resource utilization trend for a specific node
+    rpc GetNodeResourceTrend(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.NodeResourceTrendRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.ResourceTrendResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{node}/resource/trend"
+        };
+    }
+
+    // GetGpuResourceTrend returns the resource utilization trend and status for a specific GPU
+    rpc GetGpuResourceTrend(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.GpuResourceTrendRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.ResourceTrendResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{node}/gpus/{uuid}/resource/trend"
+        };
+    }
+
+    // GetKantaloupeflowResourceTrend returns the resource utilization trend for a specific kantalouepflow
+    rpc GetKantaloupeflowResourceTrend(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.KantaloupeflowResourceTrendRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.ResourceTrendResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/kantaloupeflows/{name}/resource/trend"
+        };
+    }
+
+    // GetNodeWorkloadDistribution returns the workload distribution for a specific node
+    rpc GetNodeWorkloadDistribution(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.NodeWorkloadDistributionRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.WorkloadDistributionResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{node}/workloads/distribution"
+        };
+    }
+
+    // GetClusterWorkloadDistribution returns the workload distribution across the cluster
+    rpc GetClusterWorkloadDistribution(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.ClusterWorkloadDistributionRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.WorkloadDistributionResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/workloads/distribution"
+        };
+    }
+
+    // Get top K nodes by resource usage
+    rpc GetTopNodes(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.TopNodeRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.TopNodeResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/top"
+        };
+    }
+
+    // Get top K nodes by workload count
+    rpc GetTopNodeWorkloads(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.TopNodeWorkloadRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.TopNodeResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodeWorkloads/top"
+        };
+    }
+
+    rpc GetKantaloupeflowMemoryDistribution(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.MemoryDistributionRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.MemoryDistributionResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespace/{namespace}/kantaloupeflow/{name}/memory/distribution"
+        };
+    }
+
+    rpc GetCardTopWorkloads(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.CardTopWorkloadsRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.CardTopWorkloadsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/nodes/{node}/uuids/{uuid}/top"
+        };
+    }
+
+    rpc GetClusterWorkloadsTop(kantaloupe.dynamia.ai.api.monitoring.v1alpha1.GetClusterWorkloadsTopRequest)
+        returns (kantaloupe.dynamia.ai.api.monitoring.v1alpha1.GetClusterWorkloadsTopResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/workloads/top"
+        };
+    }
+}
+
+service Kantaloupeflow {
+    // CreateKantaloupeflow create a kantaloupeflow
+    rpc CreateKantaloupeflow(kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.CreateKantaloupeflowRequest)
+        returns (kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.Kantaloupeflow) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/kantaloupeflows"
+            body: "*"
+        };
+    }
+
+    // GetKantaloupeflow get a specified Kantaloupeflow
+    rpc GetKantaloupeflow(kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.GetKantaloupeflowRequest)
+        returns (kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.GetKantaloupeflowResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/kantaloupeflows/{name}"
+        };
+    }
+
+    // DeleteKantaloupeflow delete a specified Kantaloupeflow
+    rpc DeleteKantaloupeflow(kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.DeleteKantaloupeflowRequest)
+        returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/kantaloupeflows/{name}"
+        };
+    }
+
+    // ListKantaloupeflows lists Kantaloupeflow
+    rpc ListKantaloupeflows(kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.ListKantaloupeflowsRequest)
+        returns (kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.ListKantaloupeflowsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/kantaloupeflows"
+        };
+    }
+
+    rpc GetKantaloupeTree(google.protobuf.Empty)
+        returns (kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.KantaloupeTree) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/platform/kantaloupeflows/tree"
+        };
+    }
+
+    // UpdateKantaloupeflowGPUMemory update Kantaloupeflow gpu memory. Unit is MB.
+    rpc UpdateKantaloupeflowGPUMemory(kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.UpdateKantaloupeflowGPUMemoryRequest)
+        returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/kantaloupeflows/{name}/gpumemory"
+            body: "*"
+        };
+    }
+
+    rpc GetKantaloupeflowConditions(kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.GetKantaloupeflowConditionsRequest)
+        returns (kantaloupe.dynamia.ai.api.kantaloupeflow.v1alpha1.GetKantaloupeflowConditionsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/kantaloupeflows/{name}/conditions"
+        };
+    }
+}
+
+service Credential {
+    // ListCredentials lists credentials.
+    rpc ListCredentials(kantaloupe.dynamia.ai.api.credentials.v1alpha1.ListCredentialsRequest)
+        returns (kantaloupe.dynamia.ai.api.credentials.v1alpha1.ListCredentialsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/credentials"
+        };
+    }
+
+    // DeleteCredential deletes a credential.
+    rpc DeleteCredential(kantaloupe.dynamia.ai.api.credentials.v1alpha1.DeleteCredentialRequest)
+        returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/credentials/{name}"
+        };
+    }
+
+    // CreateCredential creates a credential.
+    rpc CreateCredential(kantaloupe.dynamia.ai.api.credentials.v1alpha1.CreateCredentialRequest)
+        returns (kantaloupe.dynamia.ai.api.credentials.v1alpha1.CredentialResponse) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/credentials"
+            body: "*"
+        };
+    }
+
+    // UpdateCredential updates a credential.
+    rpc UpdateCredential(kantaloupe.dynamia.ai.api.credentials.v1alpha1.UpdateCredentialRequest)
+        returns (kantaloupe.dynamia.ai.api.credentials.v1alpha1.CredentialResponse) {
+        option (google.api.http) = {
+            put: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/credentials/{name}"
+            body: "*"
+        };
+    }
+}
+
+service Quota {
+    // ListQuotas lists resource quotas.
+    rpc ListQuotas(kantaloupe.dynamia.ai.api.quotas.v1alpha1.ListQuotasRequest)
+        returns (kantaloupe.dynamia.ai.api.quotas.v1alpha1.ListQuotasResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/quotas"
+        };
+    }
+
+    // DeleteQuota deletes a resource quota.
+    rpc DeleteQuota(kantaloupe.dynamia.ai.api.quotas.v1alpha1.DeleteQuotaRequest)
+        returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/quotas/{name}"
+        };
+    }
+
+    // CreateQuota creates a resource quota.
+    rpc CreateQuota(kantaloupe.dynamia.ai.api.quotas.v1alpha1.CreateQuotaRequest)
+        returns (kantaloupe.dynamia.ai.api.quotas.v1alpha1.QuotaResponse) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/quotas"
+            body: "*"
+        };
+    }
+
+    // UpdateQuota updates a resource quota.
+    rpc UpdateQuota(kantaloupe.dynamia.ai.api.quotas.v1alpha1.UpdateQuotaRequest)
+        returns (kantaloupe.dynamia.ai.api.quotas.v1alpha1.QuotaResponse) {
+        option (google.api.http) = {
+            put: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/quotas/{name}"
+            body: "*"
+        };
+    }
+
+    rpc GetQuota(kantaloupe.dynamia.ai.api.quotas.v1alpha1.GetQuotaRequest)
+        returns (kantaloupe.dynamia.ai.api.quotas.v1alpha1.QuotaResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespaces/{namespace}/quotas/{name}"
+        };
+    }
+}
+
+service Storage {
+    // ListStorageClasses lists storage classes.
+    rpc ListStorageClasses(kantaloupe.dynamia.ai.api.storage.v1alpha1.ListStorageClassesRequest)
+        returns (kantaloupe.dynamia.ai.api.storage.v1alpha1.ListStorageClassesResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/storageclasses"
+        };
+    }
+
+    // CreateStorageClass creates a storage
+    rpc CreateStorage(kantaloupe.dynamia.ai.api.storage.v1alpha1.CreateStorageRequest)
+        returns (kantaloupe.dynamia.ai.api.storage.v1alpha1.Storage) {
+        option (google.api.http) = {
+            post: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespace/{namespace}/storage"
+            body: "*"
+        };
+    }
+
+    // DeleteStorage deletes a storage
+    rpc DeleteStorage(kantaloupe.dynamia.ai.api.storage.v1alpha1.DeleteStorageRequest)
+        returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/namespace/{namespace}/name/{name}/storage"
+        };
+    }
+
+    // ListStorage lists specific namespace storage
+    rpc ListStorages(kantaloupe.dynamia.ai.api.storage.v1alpha1.ListStoragesRequest)
+        returns (kantaloupe.dynamia.ai.api.storage.v1alpha1.ListStoragesResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/storage"
+        };
+    }
+}
+
+service AcceleratorCard {
+    rpc ListAcceleratorCard(kantaloupe.dynamia.ai.api.acceleratorcard.v1alpha1.ListAcceleratorCardsRequest)
+        returns (kantaloupe.dynamia.ai.api.acceleratorcard.v1alpha1.ListAcceleratorCardsResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/acceleratorcards"
+        };
+    }
+
+    rpc GetAcceleratorCard(kantaloupe.dynamia.ai.api.acceleratorcard.v1alpha1.GetAcceleratorCardRequest)
+        returns (kantaloupe.dynamia.ai.api.acceleratorcard.v1alpha1.AcceleratorCard) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/acceleratorcards/{uuid}"
+        };
+    }
+
+    rpc ListModelNames(kantaloupe.dynamia.ai.api.acceleratorcard.v1alpha1.ListModelNamesRequest)
+        returns (kantaloupe.dynamia.ai.api.acceleratorcard.v1alpha1.ListModelNamesResponse) {
+        option (google.api.http) = {
+            get: "/apis/kantaloupe.dynamia.ai/v1/clusters/{cluster}/acceleratorcards/modelnames"
+        };
+    }
+}

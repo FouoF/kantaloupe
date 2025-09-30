@@ -1,0 +1,150 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.core.v1alpha1;
+
+import "api/types/objectmeta.proto";
+import "api/types/page.proto";
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/core/v1alpha1;v1alpha1";
+
+// Namespace provides a scope for Names.
+message Namespace {
+    string name                     = 1;
+    repeated string resource_quotas = 2;
+    // Standard object's metadata.
+    // kantaloupe.dynamia.ai.api.types.ObjectMeta metadata = 1;
+
+    // NamespaceSpec describes how the namespace execution will look like and when
+    // it will actually run.
+    // NamespaceSpec spec = 2;
+
+    // Status describes the current status of a Namespace.
+    // More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
+    // +optional
+    // NamespaceStatus status = 3;
+}
+
+// NamespaceSpec describes the attributes on a Namespace.
+message NamespaceSpec {
+    repeated string Finalizers = 1;
+}
+
+// NamespaceStatus is information about the current status of a Namespace.
+message NamespaceStatus {
+    // Phase represents the phase of namespace.
+    NamespacePhase phase = 1;
+
+    // ReadyPodNumber is the ready pod number on the namespace.
+    int32 ready_pod_number = 2;
+
+    // TotalPodNumber is the total pod number on the namespace.
+    int32 total_pod_number = 3;
+
+    // Represents the latest available observations of a namespace's current state.
+    repeated kantaloupe.dynamia.ai.api.types.Condition conditions = 4;
+
+    // PodSecurityEnabled shows if the namespace has enabled pod security policy.
+    bool pod_security_enabled = 5;
+
+    // The cpu usage of the member namespace.
+    double cpu_usage = 6;
+
+    // The memory usage of the member namespace.
+    double memory_usage = 7;
+}
+
+enum NamespacePhase {
+    // The namespace state is unspecified.
+    NAMESPACE_PHASE_UNSPECIFIED = 0;
+
+    // NamespaceActive means the namespace is available for use in the system
+    Active = 1;
+
+    // NamespaceTerminating means the namespace is undergoing graceful termination
+    Terminating = 2;
+}
+
+// NamespaceCondition contains details about state of namespace.
+message NamespaceCondition {
+    // Type of this namespace.
+    string type = 1;
+
+    // The current status of a namespace.
+    string status = 2;
+
+    // The time at which the most recent occurrence of this event was recorded.
+    int64 lastTransitionTime = 3;
+
+    // reason is why the action was taken. It is human-readable.
+    // This field cannot be empty for new Events and it can have at most 128
+    // characters.
+    string reason = 4;
+
+    // A human-readable description of the status of this operation.
+    string message = 5;
+}
+
+// Get Cluster Namespaces information List.
+message ListClusterNamespacesRequest {
+    // Cluster the namespace list belong to.
+    string cluster = 1;
+
+    // workspace_id the specified namespace belongs to.
+    int32 workspace_id = 2;
+
+    // workspace_alias the specified namespace belongs to.
+    string workspace_alias = 3;
+
+    // Name is to filter namespaces by namespace name
+    string name = 4;
+
+    // Page requested.
+    int32 page = 5;
+
+    // Size per page requested.
+    int32 page_size = 6;
+
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 7;
+
+    // LabelSelector is the format after labels.FormatLabels used to filter
+    string label_selector = 8;
+
+    // FieldSelector is the format after labels.FormatLabels used to filter
+    string field_selector = 9;
+
+    // FuzzyName is used to fuzzy search by cluster name or cluster alias name.
+    string fuzzy_name = 10;
+
+    // Phases is used for filter.
+    NamespacePhase phase = 11;
+
+    // ExcludeSystem determines to exclude system namespaces, defaults to False.
+    bool exclude_system = 12;
+
+    // resource_quota determines to return resource quota message, defaults to False.
+    bool resource_quota = 13;
+}
+
+message ListClusterNamespacesResponse {
+    // Data is the returned namespace list
+    repeated Namespace items = 1;
+
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}
+
+// The mode of Pod Security Standards. A namespace can configure any or all modes, or even set a different level for different modes.
+enum Mode {
+    // This is only a meaningless placeholder, to avoid zero not return.
+    MODE_UNSPECIFIED = 0;
+
+    // Enforce policy violations will cause the pod to be rejected.
+    enforce = 1;
+
+    // Audit Policy violations will trigger the addition of an audit annotation to the event recorded in the audit log, but are otherwise allowed.
+    audit = 2;
+
+    // Warn policy violations will trigger a user-facing warning, but are otherwise allowed.
+    warn = 3;
+}

@@ -1,0 +1,400 @@
+syntax = "proto3";
+
+package kantaloupe.dynamia.ai.api.clusters.v1alpha1;
+
+option go_package = "github.com/dynamia-ai/kantaloupe/api/clusters/v1alpha1";
+
+import "api/types/objectmeta.proto";
+import "api/types/page.proto";
+
+enum ClusterProvider {
+    // The cluster provider is unspecified.
+    CLUSTER_PROVIDER_UNSPECIFIED = 0;
+
+    // Generic
+    // GENERIC indicates other providers
+    GENERIC = 1;
+
+    // OverSea Distribtion
+    // REDHAT_OPENSHIFT4 indicates a provider of RedHat Openshift4
+    REDHAT_OPENSHIFT4 = 2;
+
+    // SUSE_RANCHER indicates a provider of SUSE Rancher
+    SUSE_RANCHER = 3;
+
+    // VMWARE_TANZU indicates a provider of VMware Tanzu
+    VMWARE_TANZU = 4;
+
+    // Public Cloud
+    // AWS_EKS indicates a provider of AWS EKS
+    AWS_EKS = 5;
+
+    // ALIYUN_ACK indicates a provider of Aliyun ACK
+    ALIYUN_ACK = 6;
+
+    // TENCENT_TKE indicates a provider of Huawei CCE.
+    HUAWEI_CCE = 7;
+
+    // GCP_GKE indicates a provider of Google GKE
+    GCP_GKE = 8;
+}
+
+enum ClusterType {
+    // The cluster type is unspecified.
+    CLUSTER_TYPE_UNSPECIFIED = 0;
+
+    // nvidia
+    // NVIDIA indicates the cluster type of NVIDIA.
+    NVIDIA = 1;
+
+    // MetaX
+    // METAX indicates the cluster type of MetaX.
+    METAX = 2;
+
+    // Cambricon
+    // METAX indicates the cluster type of cambricon.
+    CAMBRICON = 3;
+
+    // Moore threads
+    // METAX indicates the cluster type of moore threads.
+    MOORE_THREADS = 4;
+
+    // Iluvatar corex
+    // Iluvatar corex indicates the cluster type of Iluvatar corex.
+    ILUVATAR_COREX = 5;
+
+    // hygon
+    // HYGON corex indicates the cluster type of hygon.
+    HYGON = 6;
+
+    // ascend
+    // ASCEND indicates the cluster type of ascend.
+    ASCEND = 7;
+
+    // neuron
+    // NEURON indicates the cluster type of aws neuron.
+    NEURON = 8;
+}
+
+message Cluster {
+    // Standard object's metadata.
+    kantaloupe.dynamia.ai.api.types.ObjectMeta metadata = 1;
+
+    // ClusterSpec describes how the cluster execution will look like and when it
+    // will actually run.
+    ClusterSpec spec = 2;
+
+    // ClusterStatus contains the cluster status. The ClusterStatus will be stored
+    // in the kubeadm-config ConfigMap in the cluster, and then updated by kubeadm
+    // when additional control plane instance joins or leaves the cluster.
+    ClusterStatus status = 3;
+}
+
+message ClusterSpec {
+    // Provider represents the cloud provider name of the member cluster.
+    ClusterProvider provider = 1;
+
+    // ClusterType represents the type of cluster.
+    ClusterType type = 2;
+
+    // The API endpoint of the member cluster. This can be a hostname,
+    // hostname:port, IP or IP:port.
+    string api_endpoint = 3;
+
+    // Region represents the region of the member cluster locate in.
+    string region = 4;
+
+    // Zone represents the zone of the member cluster locate in.
+    string zone = 5;
+
+    // AliasName represents the alias of the cluster.
+    string alias_name = 6;
+
+    // description represents the description of the cluster.
+    string description = 7;
+
+    // PrometheusAddress represents the address of prometheus for the cluster.
+    string prometheus_address = 8;
+
+    // GatewayAddress represents the address of gateway for the apiserver.
+    string gateway_address = 9;
+}
+
+message ClusterStatus {
+    // KubernetesVersion represents version of the member cluster.
+    string kubernetesVersion = 1;
+
+    // KubeSystemId represents the uuid of sub cluster kube-system namespace.
+    string kubeSystemID = 2;
+
+    // ClusterVersion represents the version of the member cluster.
+    string clusterVersion = 3;
+
+    // ResourceSummary represents the node of the member cluster.
+    ResourceSummary node_summary = 4;
+
+    // ResourceSummary represents the pod of the member cluster.
+    ResourceSummary pod_summary = 5;
+
+    // ResourceSummary represents the kantaloupeflow of the member cluster.
+    ResourceSummary kantaloupeflow_summary = 6;
+
+    // The cpu usage of the member cluster.
+    double cpu_usage = 7;
+
+    // The memory usage of the member cluster.
+    double memory_usage = 8;
+
+    int32 gpu_total = 9;
+
+    int64 gpu_memory_total = 10;
+
+    int32 cpu_total = 11;
+
+    int64 memory_total = 12;
+
+    double gpu_core_usage = 13;
+
+    double gpu_memory_usage = 14;
+
+    double gpu_core_allocated = 15;
+
+    double gpu_memory_allocated = 16;
+
+    ClusterState state = 17;
+
+    // Current condition of cluster.
+    repeated kantaloupe.dynamia.ai.api.types.Condition conditions = 18;
+}
+
+// ResourceSummary refers to a resource totally.
+message ResourceSummary {
+    // Refers to a resource totally.
+    int32 total_num = 1;
+
+    // Refers to a resource has been ready.
+    int32 ready_num = 2;
+}
+
+message PlatformSummury {
+    int32 cluster_num                                        = 1;
+    int32 node_num                                           = 2;
+    int32 accelerator_card_num                               = 3;
+    int32 kantaloupeflow_num                                 = 4;
+    repeated AcceleratorCardSummury accelerator_card_summury = 5;
+}
+
+message AcceleratorCardSummury {
+    string mode      = 2;
+    int32 total_num  = 3;
+    int32 useage_num = 4;
+    int32 idel_num   = 5;
+}
+
+message GetPlatformSummuryRequest {
+    // threshold is the threshold of idel gpu.
+    // e.g. threshold = 10, means that the gpu is idel when the usage rate is less than 10.
+    int32 threshold = 1;
+}
+
+enum ClusterState {
+    UNSPECIFED = 0;
+    RUNNING    = 1;
+    UNHEALTH   = 2;
+}
+
+// Get Clusters information List.
+message ListClustersRequest {
+    // Name is the user-specified identifier.
+    // This field may not be updated.
+    string name = 1;
+
+    // Page requested.
+    int32 page = 2;
+
+    // Size per page requested.
+    int32 page_size = 3;
+
+    ClusterType type = 4;
+
+    ClusterProvider provider = 5;
+
+    ClusterState state = 6;
+
+    // sort_option determines the cluster list order reference.
+    kantaloupe.dynamia.ai.api.types.SortOption sort_option = 7;
+}
+
+// Clusters information List.
+message ListClustersResponse {
+    // data The data field is the YAML details
+    repeated Cluster items = 1;
+
+    // Pagination returned contains current page, size, and total.
+    kantaloupe.dynamia.ai.api.types.Pagination pagination = 2;
+}
+
+// IntegrateClusterRequest requests to integrates a cluster.
+message IntegrateClusterRequest {
+    // Name is the user-specified identifier.
+    // This field may not be updated.
+    string name = 1;
+
+    // It is an alias given by the user and can be changed at will.
+    string alias_name = 2;
+
+    // Provider represents the cloud provider name of the member cluster.
+    ClusterProvider provider = 3;
+
+    // Labels are key/value pairs that are attached to objects.
+    map<string, string> labels = 4;
+
+    // Annotations to attach arbitrary metadata to objects.
+    map<string, string> annotations = 5;
+
+    // description represents the details of the member cluster.
+    string description = 6;
+
+    // kubeConfig of the cluster.
+    string kube_config = 7;
+
+    // prometheusAddress represents the address of prometheus for the cluster.
+    string prometheus_address = 8;
+
+    // gatewayAddress represents the address of gateway for the apiserver.
+    string gateway_address = 9;
+
+    // ClusterType represents the type of cluster.
+    ClusterType type = 10;
+}
+
+// DeleteClusterRequest defines a request for deleting a cluster.
+message DeleteClusterRequest {
+    // Name is the user-specified identifier.
+    // This field may not be updated.
+    string name = 1;
+}
+
+// GetClusterRequest returns cluster information.
+message GetClusterRequest {
+    // Name is the user-specified identifier.
+    string name = 1;
+}
+
+// ValidateKubeconfigRequest defines a request for validating whether the kubeconfig is valid.
+message ValidateKubeconfigRequest {
+    // kubeconfig is the str of kube config.
+    string kubeconfig = 1;
+}
+
+// ValidateKubeconfigResponse defines a response to return the validate result.
+message ValidateKubeconfigResponse {
+    // validate represent whether the config is valid.
+    bool validate = 1;
+}
+
+// UpdateClusterRequest defines a request for updating a cluster.
+message UpdateClusterRequest {
+    // Name is the user-specified identifier.
+    // This field will not be updated.
+    string name = 1;
+
+    // It is an alias given by the user and can be changed at will.
+    string alias_name = 2;
+
+    // Labels are key/value pairs that are attached to objects.
+    map<string, string> labels = 3;
+
+    // Annotations to attach arbitrary metadata to objects.
+    map<string, string> annotations = 4;
+
+    // description represents the details of the member cluster.
+    string description = 5;
+
+    // prometheusAddress represents the address of prometheus for the cluster.
+    string prometheus_address = 6;
+
+    // gatewayAddress represents the address of gateway for the apiserver.
+    string gateway_address = 7;
+
+    // kubeConfig of the cluster.
+    string kube_config = 8;
+}
+
+message ListClusterVersionsResponse {
+    // versions represents existing cluster versions.
+    repeated string versions = 1;
+}
+
+message GPUSummary {
+    // model represents the gpu type.
+    string model = 1;
+    // total represents the total number of gpu.
+    int32 total = 2;
+    // mem_allocated represents the gpumemory allocated number of gpu.
+    double mem_allocated = 3;
+    // mem_usage represents the gpumemory usage rate of gpu.
+    double mem_usage = 4;
+    // core_allocated represents the gpucore allocated number of gpu.
+    double core_allocated = 5;
+    // core_usage represents the gpucore usage rate of gpu.
+    double core_usage = 6;
+}
+
+enum RankOption {
+    // RANK_OPTION_UNSPECIFIED represents the default rank option rank by total.
+    RANK_OPTION_UNSPECIFIED = 0;
+    // RANK_OPTION_MEM_ALLOCATED represents the rank option rank by mem_allocated.
+    RANK_OPTION_MEMORY = 1;
+    // RANK_OPTION_CORE represents the rank option rank by core_allocated.
+    RANK_OPTION_CORE = 2;
+}
+
+message GetPlatformGPUTopRequest {
+    // topn is the number of top n gpu
+    int32 topn = 1;
+
+    RankOption rank_option = 2;
+}
+
+message GetPlatformGPUTopResponse {
+    repeated GPUSummary gpus = 1;
+}
+
+enum KantaloupePluginName {
+    KANTALOUPE_PLUGIN_NAME_UNSPECIFED = 0;
+    HAMI                              = 1;
+}
+
+message KantaloupePlugin {
+    KantaloupePluginName name = 1;
+    string namespace          = 2;
+}
+
+message GetClusterPluginsRequest {
+    // Name is the cluster name.
+    string name = 1;
+}
+
+message GetClusterPluginsResponse {
+    repeated KantaloupePlugin plugins = 1;
+}
+
+// Get cluster Card request type.
+message ResourceName {
+    string card_model             = 1;
+    repeated string resource_keys = 2;
+}
+
+message CardRequestType {
+    string request_type                  = 1;
+    repeated ResourceName resource_names = 2;
+}
+
+message GetClusterCardRequestTypeRequest {
+    string name = 1;
+}
+
+message GetClusterCardRequestTypeResponse {
+    repeated CardRequestType request_types = 1;
+}

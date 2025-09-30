@@ -1,0 +1,25 @@
+{{- if .Values.monitoring.vendorServiceMonitor.enabled -}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: nvidia-dcgm-exporter
+    release: {{ ternary "prometheus" "should-not-exists" ( .Values.monitoring.vendorServiceMonitor.enableNvidiaServicemonitor ) }}
+  name: nvidia-dcgm-exporter
+  namespace: monitoring
+spec:
+  endpoints:
+  - interval: 15s
+    path: /metrics
+    port: gpu-metrics
+    metricRelabelings:
+    - targetLabel: cluster
+      replacement: local-cluster
+  jobLabel: app
+  namespaceSelector:
+    matchNames:
+    - gpu-operator
+  selector:
+    matchLabels:
+      app: nvidia-dcgm-exporter
+{{- end -}}
